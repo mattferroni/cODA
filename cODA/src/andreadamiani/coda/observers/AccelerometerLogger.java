@@ -4,8 +4,11 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import andreadamiani.coda.LogProvider;
 import andreadamiani.coda.R;
 import android.app.Service;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -17,9 +20,12 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 public class AccelerometerLogger extends Service implements SensorEventListener,Callback {
 
+	static final String NAME = "ACCELEROMETER";
+	
 	/** Command to the service to reply with current log. */
     static final int MSG_REPORT = 1;
     static final int MSG_RESULT = 2;
@@ -136,7 +142,16 @@ public class AccelerometerLogger extends Service implements SensorEventListener,
 	@Override
 	public boolean handleMessage(Message msg) {
 		sensorManager.unregisterListener(this, accelerometer);
-		//TODO Permanently save log.
+		String currentTimestamp=LogProvider.parseTimestamp(SystemClock.currentThreadTimeMillis());
+		ContentResolver cr = getContentResolver();
+		for(float[] val : log){
+			ContentValues newValues = new ContentValues();
+			newValues.put(LogProvider.TIMESTAMP, currentTimestamp);
+			newValues.put(LogProvider.OBSERVER_NAME, NAME);
+			newValues.put(LogProvider.LOG_VALUE, val.toString());
+			
+			cr.insert(LogProvider.CONTENT_URI, newValues);
+		}
 		return false;
 	}
 }

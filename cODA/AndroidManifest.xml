@@ -29,7 +29,7 @@
         </service>
 
         <provider
-            android:name="andreadamiani.coda.observers.AccelerometerLogProvider"
+            android:name="andreadamiani.coda.LogProvider"
             android:authorities="andreadamiani.coda.log"
             android:enabled="true"
             android:exported="true" >
