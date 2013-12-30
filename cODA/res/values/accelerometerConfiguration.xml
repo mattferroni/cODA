@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="startup_delay">0</integer>
+    <integer name="delay">300000</integer> <!-- 5 minutes -->
+    <integer name="sleep_delay">600000</integer> <!-- 10 minutes -->
+    <integer name="sensor_sampling_rate">500</integer><!-- 0,5 seconds -->
+    <integer name="sensor_sampling_interval">180000</integer> <!-- 3 minutes -->
+    <string name="sensor_filter_alpha">0.8</string> <!-- (0,1) -->
+</resources>
