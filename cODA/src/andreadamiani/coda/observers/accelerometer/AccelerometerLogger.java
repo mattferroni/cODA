@@ -1,5 +1,6 @@
-package andreadamiani.coda.observers;
+package andreadamiani.coda.observers.accelerometer;
 
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +25,7 @@ import android.os.SystemClock;
 
 public class AccelerometerLogger extends Service implements
 		SensorEventListener, Callback {
-
+	
 	static final String NAME = "ACCELEROMETER";
 
 	/** Command to the service to reply with current log. */
@@ -34,12 +35,19 @@ public class AccelerometerLogger extends Service implements
 	/**
 	 * Handler of incoming messages from clients.
 	 */
-	class IncomingHandler extends Handler {
+	static class IncomingHandler extends Handler {
+		
+		private final WeakReference<AccelerometerLogger> mService;
+		
+		IncomingHandler(AccelerometerLogger service) {
+			mService = new WeakReference<AccelerometerLogger>(service);
+		}
+		
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_REPORT:
-				Message ans = Message.obtain(null, MSG_RESULT, log);
+				Message ans = Message.obtain(null, MSG_RESULT, mService.get().log);
 				try {
 					msg.replyTo.send(ans);
 				} catch (RemoteException e) {
@@ -51,20 +59,23 @@ public class AccelerometerLogger extends Service implements
 		}
 	}
 
+	private final IncomingHandler mHandler = new IncomingHandler(this);
+	private final Messenger bindingMessenger = new Messenger(
+	mHandler);
+
 	private SensorManager sensorManager;
 	private Sensor accelerometer;
 	private int sensorDelay;
 	private int samplingInterval;
 	private List<float[]> log;
 	private Handler timer;
+	
 	private float[] linear_acceleration = { 0, 0, 0 };
 	private float[] gravity = { 0, 0, 0 };
-	private final Messenger bindingMessenger = new Messenger(
-			new IncomingHandler());
-
+	
 	public AccelerometerLogger() {
 	}
-
+	
 	@Override
 	public void onCreate() {
 		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -89,10 +100,10 @@ public class AccelerometerLogger extends Service implements
 			}
 		} else {
 			sensorDelay = getResources().getInteger(
-					R.integer.sensor_sampling_rate);
+					R.integer.accelerometer_sensor_sampling_rate);
 		}
 		samplingInterval = getResources().getInteger(
-				R.integer.sensor_sampling_interval);
+				R.integer.accelerometer_sensor_sampling_interval);
 	}
 
 	@Override
@@ -130,7 +141,7 @@ public class AccelerometerLogger extends Service implements
 		// dT is the event delivery rate.
 
 		final float alpha = Float.parseFloat(getResources().getString(
-				R.string.sensor_filter_alpha));
+				R.string.accelerometer_sensor_filter_alpha));
 
 		// Isolate the force of gravity with the low-pass filter.
 		gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
@@ -159,6 +170,6 @@ public class AccelerometerLogger extends Service implements
 
 			cr.insert(LogProvider.CONTENT_URI, newValues);
 		}
-		return false;
+		return true;
 	}
 }

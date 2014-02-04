@@ -3,26 +3,66 @@ package andreadamiani.coda.observers;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
-import andreadamiani.coda.R;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-public class AccelerometerObserver extends BroadcastReceiver {
-	public AccelerometerObserver() {
+public abstract class Observer extends BroadcastReceiver {
+
+	public enum ObsAction {
+		START, DIMM, STOP
 	}
+	
+	private Class<?> service;
+	
+	public Observer() {
+		super();
+	}
+
+
+
+	protected static PendingIntent getIntent(Context context, Class<?> service) {
+		Intent allarmIntent = new Intent(context, service);
+		PendingIntent operation = PendingIntent.getService(context, 0,
+				allarmIntent, PendingIntent.FLAG_ONE_SHOT);
+		return operation;
+	}
+
+
+
+	protected final void setService(Class<?> service) {
+		this.service = service;
+	}
+
+
+
+	protected final Class<?> getService() {
+		return service;
+	}
+
+
+
+	protected abstract void start(Context context, Intent intent);
+
+
+
+	protected abstract void dimm(Context context, Intent intent);
+
+
+
+	protected abstract void stop(Context context, Intent intent);
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		String actionS = intent.getAction();
 		String packageName = context.getPackageName();
-
+	
 		if (!actionS.startsWith(packageName)) {
 			return;
 		}
-
+	
 		actionS = actionS.substring(packageName.length() + 1);
 		try {
 			Method actionMethod = this.getClass()
@@ -39,51 +79,27 @@ public class AccelerometerObserver extends BroadcastReceiver {
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private void start(Context context, Intent intent) {
+	static public void setTimer(Context context, Class<?> service, int startupDelayRes, int delayRes) {
 		AlarmManager am = (AlarmManager) context
 				.getSystemService(Context.ALARM_SERVICE);
-		PendingIntent operation = getIntent(context, intent);
-
+		PendingIntent operation = getIntent(context, service);
+	
 		am.cancel(operation);
 		am.setInexactRepeating(
 				AlarmManager.RTC_WAKEUP,
 				System.currentTimeMillis()
 						+ context.getResources().getInteger(
-								R.integer.startup_delay), context
-						.getResources().getInteger(R.integer.delay), operation);
+								startupDelayRes), context
+						.getResources().getInteger(delayRes), operation);
 		return;
 	}
 
-	@SuppressWarnings("unused")
-	private void dimm(Context context, Intent intent) {
+
+
+	public static void cancelTimer(Context context, Class<?> service) {
 		AlarmManager am = (AlarmManager) context
 				.getSystemService(Context.ALARM_SERVICE);
-		PendingIntent operation = getIntent(context, intent);
-
-		am.cancel(operation);
-		am.setInexactRepeating(
-				AlarmManager.RTC_WAKEUP,
-				System.currentTimeMillis()
-						+ context.getResources().getInteger(
-								R.integer.startup_delay), context
-						.getResources().getInteger(R.integer.sleep_delay),
-				operation);
+		am.cancel(getIntent(context, service));
 		return;
-	}
-
-	@SuppressWarnings("unused")
-	private void stop(Context context, Intent intent) {
-		AlarmManager am = (AlarmManager) context
-				.getSystemService(Context.ALARM_SERVICE);
-		am.cancel(getIntent(context, intent));
-		return;
-	}
-
-	private PendingIntent getIntent(Context context, Intent intent) {
-		Intent allarmIntent = new Intent(context, AccelerometerLogger.class);
-		PendingIntent operation = PendingIntent.getService(context, 0,
-				allarmIntent, PendingIntent.FLAG_ONE_SHOT);
-		return operation;
 	}
 }

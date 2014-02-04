@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="location_startup_delay">0</integer>
+    <integer name="location_delay">300000</integer> <!-- 5 minutes -->
+    <integer name="location_sleep_delay">600000</integer> <!-- 10 minutes -->
+
+    <integer name="location_google_accuracy_code">102</integer> <!-- 100: PRIORITY_HIGH_ACCURACY
+    																102: PRIORITY_BALANCED_POWER_ACCURACY
+    																104: PRIORITY_LOW_POWER
+    																105: PRIORITY_NO_POWER -->
+    <integer name="location_google_sleep_accuracy_code">104</integer> <!-- 100: PRIORITY_HIGH_ACCURACY
+    																102: PRIORITY_BALANCED_POWER_ACCURACY
+    																104: PRIORITY_LOW_POWER
+    																105: PRIORITY_NO_POWER -->
+    <integer name="location_google_interval">1800</integer> <!-- 30 minutes -->
+    <integer name="location_google_sleep_interval">2700</integer> <!-- 45 minutes -->
+    <integer name="location_google_fastest_interval">600</integer> <!-- 10 minutes -->
+    <integer name="location_google_sleep_fastest_interval">900</integer> <!-- 15 minutes -->
+    <string name="location_google_displacement">1000</string><!-- 1 km -->
+    <string name="location_google_sleep_displacement">2000</string><!-- 2 km -->
+    															
+</resources>
