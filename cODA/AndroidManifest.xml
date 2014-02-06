@@ -24,6 +24,11 @@
             android:name="andreadamiani.coda.observers.accelerometer.AccelerometerObserver"
             android:enabled="true"
             android:exported="true" >
+            <intent-filter>
+                <action android:name=".START" />
+                <action android:name=".DIMM" />
+                <action android:name=".STOP" />
+            </intent-filter>
         </receiver>
 
         <service
@@ -43,6 +48,21 @@
             android:name="andreadamiani.coda.observers.location.LocationLogger"
             android:enabled="true"
             android:exported="true" >
+             <intent-filter>
+                <action android:name=".START" />
+                <action android:name=".DIMM" />
+                <action android:name=".STOP" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="andreadamiani.coda.Launcher"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BATTERY_LOW" />
+                <action android:name="android.intent.action.BATTERY_OKAY" />
+            </intent-filter>
         </receiver>
     </application>
 
