@@ -15,8 +15,6 @@ public abstract class Observer extends BroadcastReceiver {
 		START, DIMM, STOP
 	}
 	
-	private Class<?> service;
-	
 	public Observer() {
 		super();
 	}
@@ -29,19 +27,6 @@ public abstract class Observer extends BroadcastReceiver {
 				allarmIntent, PendingIntent.FLAG_ONE_SHOT);
 		return operation;
 	}
-
-
-
-	protected final void setService(Class<?> service) {
-		this.service = service;
-	}
-
-
-
-	protected final Class<?> getService() {
-		return service;
-	}
-
 
 
 	protected abstract void start(Context context, Intent intent);

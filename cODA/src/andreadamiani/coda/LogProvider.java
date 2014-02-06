@@ -16,7 +16,6 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.util.Log;
 
 @SuppressLint("SimpleDateFormat")
@@ -33,6 +32,7 @@ public class LogProvider extends ContentProvider {
 	public static final String OBSERVER_NAME = "OBSERVER_NAME";
 	public static final String LOG_VALUE = "VALUE";
 	public static final String TIMESTAMP = "TIMESTAMP";
+	public static final String EXPIRY = "EXPIRY";
 
 	// Create the constants used to differentiate between the different URI
 	// requests.
@@ -174,16 +174,14 @@ public class LogProvider extends ContentProvider {
 		// Open a read / write database to support the transaction.
 		SQLiteDatabase db = myOpenHelper.getWritableDatabase();
 
-		// Insert the values into the table
-		db.insert(MySQLiteOpenHelper.DATABASE_TABLE, null, values);
-
 		while (true) {
 			Cursor cursor = query(
 					Uri.parse(CONTENT_URI + values.getAsString(OBSERVER_NAME)
 							+ "/oldest"), null, null, null, null);
 			if (cursor.getCount() > 0
 					&& parseToTimestamp(cursor.getString(cursor
-							.getColumnIndex(TIMESTAMP))) < getExpiryLimit()) {
+							.getColumnIndex(TIMESTAMP))) < parseToTimestamp(cursor
+							.getString(cursor.getColumnIndex(EXPIRY)))) {
 				delete(Uri.parse(CONTENT_URI
 						+ values.getAsString(OBSERVER_NAME) + "/oldest"), null,
 						null);
@@ -191,6 +189,13 @@ public class LogProvider extends ContentProvider {
 				break;
 			}
 		}
+
+		// Insert the values into the table
+		db.insert(MySQLiteOpenHelper.DATABASE_TABLE, null, values);
+
+		// Notify any observers of the change in the data set.
+		getContext().getContentResolver().notifyChange(uri, null);
+
 		return null;
 	}
 
@@ -231,12 +236,6 @@ public class LogProvider extends ContentProvider {
 		queryBuilder.appendWhere(OBSERVER_NAME + "=" + obsName);
 	}
 
-	private long getExpiryLimit() {
-		return SystemClock.currentThreadTimeMillis()
-				- getContext().getResources().getInteger(
-						R.integer.logentry_lifetime);
-	}
-
 	private static class MySQLiteOpenHelper extends SQLiteOpenHelper {
 
 		// Database name, version, and table names.
@@ -246,9 +245,9 @@ public class LogProvider extends ContentProvider {
 
 		// SQL Statement to create a new database.
 		private static final String DATABASE_CREATE = "create table "
-				+ DATABASE_TABLE + " (" + TIMESTAMP + " text not null,"
-				+ OBSERVER_NAME + "text not null," + LOG_VALUE
-				+ "text not null);";
+				+ DATABASE_TABLE + " (" + TIMESTAMP + " text not null, "
+				+ OBSERVER_NAME + " text not null, " + LOG_VALUE
+				+ " text not null, " + EXPIRY + " text not null);";
 
 		public MySQLiteOpenHelper(Context context, String name,
 				CursorFactory factory, int version) {

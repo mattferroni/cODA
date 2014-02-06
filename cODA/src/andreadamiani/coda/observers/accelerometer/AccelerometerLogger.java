@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import andreadamiani.coda.LogProvider;
+import andreadamiani.coda.LogWriter;
 import andreadamiani.coda.R;
 import android.app.Service;
 import android.content.ContentResolver;
@@ -21,12 +22,11 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.os.SystemClock;
 
 public class AccelerometerLogger extends Service implements
 		SensorEventListener, Callback {
 	
-	static final String NAME = "ACCELEROMETER";
+	public static final String NAME = "ACCELEROMETER";
 
 	/** Command to the service to reply with current log. */
 	static final int MSG_REPORT = 1;
@@ -159,16 +159,17 @@ public class AccelerometerLogger extends Service implements
 	@Override
 	public boolean handleMessage(Message msg) {
 		sensorManager.unregisterListener(this, accelerometer);
-		String currentTimestamp = LogProvider.parseTimestamp(SystemClock
-				.currentThreadTimeMillis());
+		String currentTimestamp = LogProvider.parseTimestamp(System.currentTimeMillis());
+		String expiryTimestamp = LogProvider.parseTimestamp(System.currentTimeMillis()+getResources().getInteger(R.integer.accelerometer_expiry));
 		ContentResolver cr = getContentResolver();
 		for (float[] val : log) {
 			ContentValues newValues = new ContentValues();
 			newValues.put(LogProvider.TIMESTAMP, currentTimestamp);
 			newValues.put(LogProvider.OBSERVER_NAME, NAME);
 			newValues.put(LogProvider.LOG_VALUE, val.toString());
+			newValues.put(LogProvider.EXPIRY, expiryTimestamp);
 
-			cr.insert(LogProvider.CONTENT_URI, newValues);
+			LogWriter.write(cr, newValues);
 		}
 		return true;
 	}
