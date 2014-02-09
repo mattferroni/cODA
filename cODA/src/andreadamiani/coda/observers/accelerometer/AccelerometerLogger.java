@@ -99,7 +99,7 @@ public class AccelerometerLogger extends Service implements
 		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.GINGERBREAD) {
 			// Compatibility for API level 8
 			String constantName = getResources().getString(
-					R.string.sensor_sampling_rate);
+					R.string.accelerometer_sensor_sampling_rate);
 			try {
 				sensorDelay = SensorManager.class
 						.getDeclaredField(constantName).getInt(null);

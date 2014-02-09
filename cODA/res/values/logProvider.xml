@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="logentry_lifetime">3600000</integer> <!-- 1 hour -->
+    <integer name="cleenup_cycle">3600000</integer> <!-- 1 hour -->
 </resources>

@@ -14,14 +14,9 @@
 
     <application
         android:name="andreadamiani.coda.Application"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="4030530" />
-
+        android:label="@string/app_name" >
         <receiver
             android:name="andreadamiani.coda.observers.accelerometer.AccelerometerObserver"
             android:enabled="true"
@@ -45,7 +40,9 @@
             android:name="andreadamiani.coda.LogProvider"
             android:authorities="andreadamiani.coda.log"
             android:enabled="true"
-            android:exported="true" >
+            android:exported="true"
+            android:readPermission="andreadamiani.coda.READ_LOG"
+            android:writePermission="andreadamiani.coda.WRITE_LOG" >
         </provider>
 
         <receiver
@@ -73,16 +70,6 @@
                 <action android:name="android.intent.action.BATTERY_OKAY" />
             </intent-filter>
         </receiver>
-
-        <activity
-            android:name="andreadamiani.coda.MainActivity"
-            android:label="@string/title_activity_main" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
     </application>
 
 </manifest>

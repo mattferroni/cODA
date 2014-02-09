@@ -60,11 +60,17 @@ public class LogProvider extends ContentProvider {
 
 	private MySQLiteOpenHelper myOpenHelper;
 
+	private long cleenupTime;
+	private static final long CLEENUP_DELAY = Application.getInstance().getApplicationContext()
+			.getResources().getInteger(R.integer.cleenup_cycle);
+
 	@Override
 	public boolean onCreate() {
 		myOpenHelper = new MySQLiteOpenHelper(getContext(),
 				MySQLiteOpenHelper.DATABASE_NAME, null,
 				MySQLiteOpenHelper.DATABASE_VERSION);
+		cleenupTime = System.currentTimeMillis()
+				+ CLEENUP_DELAY;
 		return true;
 	}
 
@@ -121,7 +127,7 @@ public class LogProvider extends ContentProvider {
 		SQLiteDatabase db = myOpenHelper.getWritableDatabase();
 
 		this.delete(LogProvider.CONTENT_URI, null, null);
-		
+
 		Log.d(DEBUG_TAG,
 				"Inserting log entry: <" + values.getAsString(TIMESTAMP) + ","
 						+ values.getAsString(OBSERVER_NAME) + ","
@@ -145,6 +151,12 @@ public class LogProvider extends ContentProvider {
 
 		switch (uriMatcher.match(uri)) {
 		case ALLOBS:
+			long currentTime = System.currentTimeMillis();
+			if(currentTime < cleenupTime){
+				return 0;
+			} else {
+				cleenupTime = currentTime + CLEENUP_DELAY;
+			}
 			selection = EXPIRY + " <= " + System.currentTimeMillis() + " ";
 			Log.d(DEBUG_TAG, "Deleting the outdated records ...");
 			break;
@@ -177,7 +189,7 @@ public class LogProvider extends ContentProvider {
 		c.setTimeInMillis(millis);
 		return DATE_FORMAT.format(c.getTime());
 	}
-	
+
 	private String createInnerQuery(String obsName, String[] cols) {
 		return SQLiteQueryBuilder.buildQueryString(true,
 				MySQLiteOpenHelper.DATABASE_TABLE, cols, OBSERVER_NAME + " = "

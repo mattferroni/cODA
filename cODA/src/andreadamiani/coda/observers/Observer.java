@@ -14,7 +14,8 @@ import android.util.Log;
 public abstract class Observer extends BroadcastReceiver {
 
 	private static final String DEBUG_TAG = "[cODA] OBSERVER";
-
+	public static final String PERMISSION = "OBSERVER_ACTION";
+	
 	public enum ObsAction {
 		START, DIMM, STOP
 	}
