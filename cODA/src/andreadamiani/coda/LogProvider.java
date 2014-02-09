@@ -1,6 +1,5 @@
 package andreadamiani.coda;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -21,59 +20,57 @@ import android.util.Log;
 @SuppressLint("SimpleDateFormat")
 public class LogProvider extends ContentProvider {
 
-	public static final Uri CONTENT_URI = Uri
-			.parse("content://andreadamiani.coda.log/obs");
+	private static final String DEBUG_TAG = "[cODA] LOG CONTENT PROVIDER";
+
+	public static final String OBSERVER_FILTER_KEY = "obs";
+	public static final String OLDEST_FILTER_KEY = "oldest";
+	public static final String LAST_FILTER_KEY = "last";
+
+	public static final String AUTHORITY = "andreadamiani.coda.log";
+	public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY
+			+ "/" + OBSERVER_FILTER_KEY);
 
 	public static final SimpleDateFormat DATE_FORMAT;
-
 	static {
 		DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	}
+
 	public static final String OBSERVER_NAME = "OBSERVER_NAME";
 	public static final String LOG_VALUE = "VALUE";
 	public static final String TIMESTAMP = "TIMESTAMP";
 	public static final String EXPIRY = "EXPIRY";
 
-	// Create the constants used to differentiate between the different URI
-	// requests.
 	private static final int ALLOBS = 1;
 	private static final int SINGLE_OBS = 2;
 	private static final int LAST_READ = 3;
 	private static final int OLDEST_READ = 4;
 
 	private static final UriMatcher uriMatcher;
-
-	// Populate the UriMatcher object, where a URI ending in
-	// 'elements' will correspond to a request for all items,
-	// and 'elements/[rowID]' represents a single row.
 	static {
 		uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-		uriMatcher.addURI("andreadamiani.coda.log", "obs", ALLOBS);
-		uriMatcher.addURI("andreadamiani.coda.log", "obs/*/last", LAST_READ);
-		uriMatcher.addURI("andreadamiani.coda.log", "obs/*", SINGLE_OBS);
 		uriMatcher
-				.addURI("andreadamiani.coda.log", "obs/*/oldest", OLDEST_READ);
+				.addURI("andreadamiani.coda.log", OBSERVER_FILTER_KEY, ALLOBS);
+		uriMatcher.addURI("andreadamiani.coda.log", OBSERVER_FILTER_KEY + "/*/"
+				+ LAST_FILTER_KEY, LAST_READ);
+		uriMatcher.addURI("andreadamiani.coda.log", OBSERVER_FILTER_KEY + "/*",
+				SINGLE_OBS);
+		uriMatcher.addURI("andreadamiani.coda.log", OBSERVER_FILTER_KEY + "/*/"
+				+ OLDEST_FILTER_KEY, OLDEST_READ);
 	}
 
 	private MySQLiteOpenHelper myOpenHelper;
 
 	@Override
 	public boolean onCreate() {
-		// Construct the underlying database.
-		// Defer opening the database until you need to perform
-		// a query or transaction.
 		myOpenHelper = new MySQLiteOpenHelper(getContext(),
 				MySQLiteOpenHelper.DATABASE_NAME, null,
 				MySQLiteOpenHelper.DATABASE_VERSION);
-
 		return true;
 	}
 
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
-
-		// Open the database.
 		SQLiteDatabase db;
 		try {
 			db = myOpenHelper.getWritableDatabase();
@@ -81,54 +78,89 @@ public class LogProvider extends ContentProvider {
 			db = myOpenHelper.getReadableDatabase();
 		}
 
-		// Replace these with valid SQL statements if necessary.
 		String groupBy = null;
 		String having = null;
-
-		// Use an SQLite Query Builder to simplify constructing the
-		// database query.
-		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		String obsName = null;
-		final String[] min = { "MIN(" + TIMESTAMP + ")" };
-		final String[] max = { "MAX(" + TIMESTAMP + ")" };
+		final String[] min = { " MIN( " + TIMESTAMP + " )" };
+		final String[] max = { " MAX( " + TIMESTAMP + " )" };
 
-		// If this is a row query, limit the result set to the passed in row.
+		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+
 		switch (uriMatcher.match(uri)) {
 		case OLDEST_READ:
 			obsName = uri.getPathSegments().get(1);
-			queryBuilder.appendWhere(TIMESTAMP + "="
-					+ createInnerQuery(obsName, min));
-			whereObsQuery(uri, queryBuilder, obsName);
+			queryBuilder.appendWhere(TIMESTAMP + " = ("
+					+ createInnerQuery(obsName, min) + ")");
+			generateSingleObserverQuery(uri, queryBuilder, obsName, true);
+			Log.d(DEBUG_TAG, "Querying for the oldest record for " + obsName);
 			break;
 		case LAST_READ:
 			obsName = uri.getPathSegments().get(1);
-			queryBuilder.appendWhere(TIMESTAMP + "="
-					+ createInnerQuery(obsName, max));
-			whereObsQuery(uri, queryBuilder, obsName);
+			queryBuilder.appendWhere(TIMESTAMP + " = ("
+					+ createInnerQuery(obsName, max) + ")");
+			generateSingleObserverQuery(uri, queryBuilder, obsName, true);
+			Log.d(DEBUG_TAG, "Querying for the last record for " + obsName);
 			break;
 		case SINGLE_OBS:
-			whereObsQuery(uri, queryBuilder, obsName);
+			generateSingleObserverQuery(uri, queryBuilder, obsName, false);
+			Log.d(DEBUG_TAG, "Querying for all records for " + obsName);
 			break;
 		default:
+			Log.d(DEBUG_TAG, "Querying for the entire log");
 			break;
 		}
 
-		// Specify the table on which to perform the query. This can
-		// be a specific table or a join as required.
 		queryBuilder.setTables(MySQLiteOpenHelper.DATABASE_TABLE);
 
-		// Execute the query.
-		Cursor cursor = queryBuilder.query(db, projection, selection,
-				selectionArgs, groupBy, having, sortOrder);
+		return queryBuilder.query(db, projection, selection, selectionArgs,
+				groupBy, having, sortOrder);
+	}
 
-		// Return the result Cursor.
-		return cursor;
+	@Override
+	public Uri insert(Uri uri, ContentValues values) {
+		SQLiteDatabase db = myOpenHelper.getWritableDatabase();
+
+		this.delete(LogProvider.CONTENT_URI, null, null);
+		
+		Log.d(DEBUG_TAG,
+				"Inserting log entry: <" + values.getAsString(TIMESTAMP) + ","
+						+ values.getAsString(OBSERVER_NAME) + ","
+						+ values.getAsString(LOG_VALUE) + ","
+						+ values.getAsString(EXPIRY) + ">");
+		db.insert(MySQLiteOpenHelper.DATABASE_TABLE, null, values);
+		getContext().getContentResolver().notifyChange(uri, null);
+		return Uri.parse(CONTENT_URI + "/" + values.getAsString(OBSERVER_NAME)
+				+ "/" + LAST_FILTER_KEY);
+	}
+
+	@Override
+	public int update(Uri uri, ContentValues values, String selection,
+			String[] selectionArgs) {
+		throw new UnsupportedOperationException("Not supported");
+	}
+
+	@Override
+	public int delete(Uri uri, String selection, String[] selectionArgs) {
+		SQLiteDatabase db = myOpenHelper.getWritableDatabase();
+
+		switch (uriMatcher.match(uri)) {
+		case ALLOBS:
+			selection = EXPIRY + " <= " + System.currentTimeMillis() + " ";
+			Log.d(DEBUG_TAG, "Deleting the outdated records ...");
+			break;
+		default:
+			throw new IllegalArgumentException(
+					"Selective deletion not implemented");
+		}
+
+		int deleteCount = db.delete(MySQLiteOpenHelper.DATABASE_TABLE,
+				selection, null);
+		getContext().getContentResolver().notifyChange(uri, null);
+		return deleteCount;
 	}
 
 	@Override
 	public String getType(Uri uri) {
-		// Return a string that identifies the MIME type
-		// for a Content Provider URI
 		switch (uriMatcher.match(uri)) {
 		case ALLOBS:
 		case SINGLE_OBS:
@@ -140,100 +172,25 @@ public class LogProvider extends ContentProvider {
 		}
 	}
 
-	@Override
-	public int delete(Uri uri, String selection, String[] selectionArgs) {
-		// Open a read / write database to support the transaction.
-		SQLiteDatabase db = myOpenHelper.getWritableDatabase();
-
-		// If this is a row URI, limit the deletion to the specified row.
-		switch (uriMatcher.match(uri)) {
-		case OLDEST_READ:
-			String obsName = uri.getPathSegments().get(1);
-			String[] cols = { "MIN(" + TIMESTAMP + ")" };
-			selection = TIMESTAMP + "=" + createInnerQuery(obsName, cols)
-					+ " AND " + OBSERVER_NAME + "=" + obsName;
-			break;
-		default:
-			throw new IllegalArgumentException(
-					"Partial deletion not implemented");
-		}
-
-		// Perform the deletion.
-		int deleteCount = db.delete(MySQLiteOpenHelper.DATABASE_TABLE,
-				selection, selectionArgs);
-
-		// Notify any observers of the change in the data set.
-		getContext().getContentResolver().notifyChange(uri, null);
-
-		// Return the number of deleted items.
-		return deleteCount;
-	}
-
-	@Override
-	public Uri insert(Uri uri, ContentValues values) {
-		// Open a read / write database to support the transaction.
-		SQLiteDatabase db = myOpenHelper.getWritableDatabase();
-
-		while (true) {
-			Cursor cursor = query(
-					Uri.parse(CONTENT_URI + values.getAsString(OBSERVER_NAME)
-							+ "/oldest"), null, null, null, null);
-			if (cursor.getCount() > 0
-					&& parseToTimestamp(cursor.getString(cursor
-							.getColumnIndex(TIMESTAMP))) < parseToTimestamp(cursor
-							.getString(cursor.getColumnIndex(EXPIRY)))) {
-				delete(Uri.parse(CONTENT_URI
-						+ values.getAsString(OBSERVER_NAME) + "/oldest"), null,
-						null);
-			} else {
-				break;
-			}
-		}
-
-		// Insert the values into the table
-		db.insert(MySQLiteOpenHelper.DATABASE_TABLE, null, values);
-
-		// Notify any observers of the change in the data set.
-		getContext().getContentResolver().notifyChange(uri, null);
-
-		return null;
-	}
-
-	@Override
-	public int update(Uri uri, ContentValues values, String selection,
-			String[] selectionArgs) {
-
-		throw new UnsupportedOperationException("Not supported");
-	}
-
-	static public String parseTimestamp(long millis) {
+	static public String timestampToString(long millis) {
 		Calendar c = Calendar.getInstance();
 		c.setTimeInMillis(millis);
 		return DATE_FORMAT.format(c.getTime());
 	}
-
-	static public long parseToTimestamp(String date) {
-		Calendar c = Calendar.getInstance();
-		try {
-			c.setTime(DATE_FORMAT.parse(date));
-		} catch (ParseException e) {
-			throw new IllegalArgumentException("Date format not parsable");
-		}
-		return c.getTimeInMillis();
-	}
-
+	
 	private String createInnerQuery(String obsName, String[] cols) {
 		return SQLiteQueryBuilder.buildQueryString(true,
-				MySQLiteOpenHelper.DATABASE_TABLE, cols, OBSERVER_NAME + "="
-						+ obsName, null, null, null, null);
+				MySQLiteOpenHelper.DATABASE_TABLE, cols, OBSERVER_NAME + " = "
+						+ "'" + obsName + "'", null, null, null, null);
 	}
 
-	private void whereObsQuery(Uri uri, SQLiteQueryBuilder queryBuilder,
-			String obsName) {
+	private void generateSingleObserverQuery(Uri uri,
+			SQLiteQueryBuilder queryBuilder, String obsName, boolean appending) {
 		if (obsName != null) {
 			obsName = uri.getPathSegments().get(1);
 		}
-		queryBuilder.appendWhere(OBSERVER_NAME + "=" + obsName);
+		queryBuilder.appendWhere((appending ? " AND " : " ") + OBSERVER_NAME
+				+ " = " + "'" + obsName + "'");
 	}
 
 	private static class MySQLiteOpenHelper extends SQLiteOpenHelper {
@@ -245,9 +202,9 @@ public class LogProvider extends ContentProvider {
 
 		// SQL Statement to create a new database.
 		private static final String DATABASE_CREATE = "create table "
-				+ DATABASE_TABLE + " (" + TIMESTAMP + " text not null, "
+				+ DATABASE_TABLE + " (" + TIMESTAMP + " integer not null, "
 				+ OBSERVER_NAME + " text not null, " + LOG_VALUE
-				+ " text not null, " + EXPIRY + " text not null);";
+				+ " text not null, " + EXPIRY + " integer not null);";
 
 		public MySQLiteOpenHelper(Context context, String name,
 				CursorFactory factory, int version) {

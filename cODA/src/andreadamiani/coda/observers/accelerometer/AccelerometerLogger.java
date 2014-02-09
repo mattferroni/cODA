@@ -1,15 +1,18 @@
 package andreadamiani.coda.observers.accelerometer;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.apache.http.ParseException;
 
 import andreadamiani.coda.LogProvider;
 import andreadamiani.coda.LogWriter;
 import andreadamiani.coda.R;
 import android.app.Service;
-import android.content.ContentResolver;
+import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -22,10 +25,19 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Log;
 
 public class AccelerometerLogger extends Service implements
 		SensorEventListener, Callback {
-	
+
+	private static final String VALUE_SEPARATOR = ";";
+
+	private static final String DEBUG_TAG = "[cODA] ACCELEROMETER LOGGER";
+
+	public AccelerometerLogger() {
+		super();
+	}
+
 	public static final String NAME = "ACCELEROMETER";
 
 	/** Command to the service to reply with current log. */
@@ -36,18 +48,19 @@ public class AccelerometerLogger extends Service implements
 	 * Handler of incoming messages from clients.
 	 */
 	static class IncomingHandler extends Handler {
-		
+
 		private final WeakReference<AccelerometerLogger> mService;
-		
+
 		IncomingHandler(AccelerometerLogger service) {
 			mService = new WeakReference<AccelerometerLogger>(service);
 		}
-		
+
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_REPORT:
-				Message ans = Message.obtain(null, MSG_RESULT, mService.get().log);
+				Message ans = Message.obtain(null, MSG_RESULT,
+						mService.get().log);
 				try {
 					msg.replyTo.send(ans);
 				} catch (RemoteException e) {
@@ -60,8 +73,7 @@ public class AccelerometerLogger extends Service implements
 	}
 
 	private final IncomingHandler mHandler = new IncomingHandler(this);
-	private final Messenger bindingMessenger = new Messenger(
-	mHandler);
+	private final Messenger bindingMessenger = new Messenger(mHandler);
 
 	private SensorManager sensorManager;
 	private Sensor accelerometer;
@@ -69,15 +81,18 @@ public class AccelerometerLogger extends Service implements
 	private int samplingInterval;
 	private List<float[]> log;
 	private Handler timer;
-	
-	private float[] linear_acceleration = { 0, 0, 0 };
+
 	private float[] gravity = { 0, 0, 0 };
-	
-	public AccelerometerLogger() {
-	}
-	
+	private Long lastRead = null;
+
+	private int sensorSamplingRate;
+
+	private boolean registered;
+
 	@Override
 	public void onCreate() {
+		Log.d(DEBUG_TAG, "Creating the service...");
+		registered = false;
 		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 		accelerometer = sensorManager
 				.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -102,12 +117,20 @@ public class AccelerometerLogger extends Service implements
 			sensorDelay = getResources().getInteger(
 					R.integer.accelerometer_sensor_sampling_rate);
 		}
+		sensorSamplingRate = getResources().getInteger(
+				R.integer.accelerometer_sensor_sampling_rate);
 		samplingInterval = getResources().getInteger(
 				R.integer.accelerometer_sensor_sampling_interval);
 	}
 
 	@Override
 	public void onDestroy() {
+		timer.removeCallbacksAndMessages(null);
+		timer = null;
+		if (registered) {
+			sensorManager.unregisterListener(this, accelerometer);
+			registered = false;
+		}
 		log = null;
 		accelerometer = null;
 		sensorManager = null;
@@ -115,11 +138,16 @@ public class AccelerometerLogger extends Service implements
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		Log.d(DEBUG_TAG, "Starting logger, it will stop in " + samplingInterval
+				/ 1000 + " seconds");
 		log = Collections.synchronizedList(new LinkedList<float[]>());
-		sensorManager.registerListener(this, accelerometer, sensorDelay);
+		if (!registered) {
+			sensorManager.registerListener(this, accelerometer, sensorDelay);
+			registered = true;
+		}
 		timer = new Handler(this);
 		timer.sendEmptyMessageDelayed(0, samplingInterval);
-		return 0;
+		return Service.START_NOT_STICKY;
 	}
 
 	@Override
@@ -129,12 +157,17 @@ public class AccelerometerLogger extends Service implements
 
 	@Override
 	public void onAccuracyChanged(Sensor arg0, int arg1) {
-		// TODO Verify necessity
 	}
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		// TODO Verify filtering effectiveness
+		long currentTime = System.currentTimeMillis();
+
+		if (lastRead != null && lastRead + sensorSamplingRate > currentTime) {
+			return;
+		}
+
+		this.lastRead = currentTime;
 
 		// Alpha is calculated as t / (t + dT),
 		// where t is the low-pass filter's time-constant and
@@ -149,28 +182,70 @@ public class AccelerometerLogger extends Service implements
 		gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
 
 		// Remove the gravity contribution with the high-pass filter.
+		float[] linear_acceleration = new float[3];
 		linear_acceleration[0] = event.values[0] - gravity[0];
 		linear_acceleration[1] = event.values[1] - gravity[1];
 		linear_acceleration[2] = event.values[2] - gravity[2];
 
+		Log.d(DEBUG_TAG,
+				"Registering "
+						+ AccelerometerLogger
+								.valueToString(linear_acceleration));
 		log.add(linear_acceleration);
 	}
 
 	@Override
 	public boolean handleMessage(Message msg) {
-		sensorManager.unregisterListener(this, accelerometer);
-		String currentTimestamp = LogProvider.parseTimestamp(System.currentTimeMillis());
-		String expiryTimestamp = LogProvider.parseTimestamp(System.currentTimeMillis()+getResources().getInteger(R.integer.accelerometer_expiry));
-		ContentResolver cr = getContentResolver();
-		for (float[] val : log) {
-			ContentValues newValues = new ContentValues();
-			newValues.put(LogProvider.TIMESTAMP, currentTimestamp);
-			newValues.put(LogProvider.OBSERVER_NAME, NAME);
-			newValues.put(LogProvider.LOG_VALUE, val.toString());
-			newValues.put(LogProvider.EXPIRY, expiryTimestamp);
-
-			LogWriter.write(cr, newValues);
+		Log.d(DEBUG_TAG, "Stop signal received!");
+		if (registered) {
+			sensorManager.unregisterListener(this, accelerometer);
+			registered = false;
 		}
+		lastRead = null;
+		ArrayList<ContentProviderOperation> batch = new ArrayList<ContentProviderOperation>();
+		for (int i = 0; i < log.size(); i++) {
+			long timestamp = System.currentTimeMillis() - sensorSamplingRate
+					* (log.size() - (i + 1));
+			float[] val = log.get(i);
+			ContentValues newValues = new ContentValues();
+			newValues.put(LogProvider.TIMESTAMP, timestamp);
+			newValues.put(LogProvider.OBSERVER_NAME, NAME);
+			newValues.put(LogProvider.LOG_VALUE,
+					AccelerometerLogger.valueToString(val));
+			newValues
+					.put(LogProvider.EXPIRY,
+							System.currentTimeMillis()
+									+ getResources().getInteger(
+											R.integer.accelerometer_expiry));
+			Log.d(DEBUG_TAG, "Preparing insert for: " + val[0] + ";" + val[1]
+					+ ";" + val[2] + "(time: " + timestamp + ")");
+			batch.add(ContentProviderOperation
+					.newInsert(LogProvider.CONTENT_URI).withValues(newValues)
+					.withYieldAllowed(true).build());
+		}
+		LogWriter.write(batch);
+		Log.d(DEBUG_TAG, "Stopping service...");
+		this.stopSelf();
 		return true;
+	}
+
+	public static String valueToString(float[] value) {
+		StringBuilder string = new StringBuilder(Float.toString(value[0]));
+		for (int i = 1; i < value.length; i++) {
+			string.append(VALUE_SEPARATOR + Float.toString(value[i]));
+		}
+		return string.toString();
+	}
+
+	public static float[] parseValue(String value) {
+		String[] values = value.split(VALUE_SEPARATOR);
+		if (values.length != 3) {
+			throw new ParseException();
+		}
+		float[] ret = new float[3];
+		for (int i = 0; i < values.length; i++) {
+			ret[i] = Float.parseFloat(values[i]);
+		}
+		return ret;
 	}
 }

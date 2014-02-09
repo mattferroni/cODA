@@ -3,21 +3,25 @@
  */
 package andreadamiani.coda;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
+import java.util.ArrayList;
+
+import android.content.ContentProviderOperation;
+import android.content.OperationApplicationException;
+import android.os.RemoteException;
+import android.util.Log;
 
 /**
  * @author Andrea
  *
  */
 public class LogWriter implements Runnable {
-
-	private final ContentResolver contentResolver;
-	private final ContentValues contentValues;
 	
-	private LogWriter(ContentResolver contentResolver, ContentValues contentValues){
-		this.contentResolver = contentResolver;
-		this.contentValues = contentValues;
+	private static final String DEBUG_TAG = "[cODA] LOG WRITER";
+
+	private final ArrayList<ContentProviderOperation> batch;
+	
+	private LogWriter(ArrayList<ContentProviderOperation> batch){
+		this.batch = batch;
 	}
 	
 	
@@ -26,11 +30,18 @@ public class LogWriter implements Runnable {
 	 */
 	@Override
 	public void run() {
-		contentResolver.insert(LogProvider.CONTENT_URI, contentValues);
+		try {
+			Log.d(DEBUG_TAG, "Writing to log ...");
+			Application.getInstance().getContentResolver().applyBatch(LogProvider.AUTHORITY, batch);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (OperationApplicationException e) {
+			e.printStackTrace();
+		}
 	}
 
 	
-	public static void write(ContentResolver contentResolver, ContentValues contentValues){
-		new Thread(new LogWriter(contentResolver, contentValues)).run();
+	public static void write(ArrayList<ContentProviderOperation> batch){
+		new Thread(new LogWriter(batch)).run();
 	}
 }

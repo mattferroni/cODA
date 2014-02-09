@@ -3,23 +3,25 @@ package andreadamiani.coda.observers;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
+import andreadamiani.coda.Application;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 public abstract class Observer extends BroadcastReceiver {
+
+	private static final String DEBUG_TAG = "[cODA] OBSERVER";
 
 	public enum ObsAction {
 		START, DIMM, STOP
 	}
-	
+
 	public Observer() {
 		super();
 	}
-
-
 
 	protected static PendingIntent getIntent(Context context, Class<?> service) {
 		Intent allarmIntent = new Intent(context, service);
@@ -28,63 +30,58 @@ public abstract class Observer extends BroadcastReceiver {
 		return operation;
 	}
 
-
 	protected abstract void start(Context context, Intent intent);
 
-
-
 	protected abstract void dimm(Context context, Intent intent);
-
-
 
 	protected abstract void stop(Context context, Intent intent);
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		String actionS = intent.getAction();
-		String packageName = context.getPackageName();
-	
-		if (!actionS.startsWith(packageName)) {
+		if (!Application.isInternalIntent(intent)) {
 			return;
 		}
-	
-		actionS = actionS.substring(packageName.length() + 1);
+
+		Log.d(DEBUG_TAG, "Reacting to Intent ...");
+		String actionS = Application.getInternalAction(intent);
 		try {
 			Method actionMethod = this.getClass()
-					.getMethod(actionS.toLowerCase(Locale.US), Context.class,
-							Intent.class);
+					.getDeclaredMethod(actionS.toLowerCase(Locale.US),
+							Context.class, Intent.class);
+			actionMethod.setAccessible(true);
 			actionMethod.invoke(this, context, intent);
 		} catch (NoSuchMethodException e) {
-			// The observer is not able to accomplish this request.
+			Log.d(DEBUG_TAG, "The generic observer is not handling the intent");
 			return;
 		} catch (Exception e) {
-			// Error Condition
 			e.printStackTrace();
-			return;
+			throw new RuntimeException(e);
 		}
 	}
 
-	static public void setTimer(Context context, Class<?> service, int startupDelayRes, int delayRes) {
+	static public void setTimer(Context context, Intent intent,
+			int startupDelayRes, int delayRes) {
 		AlarmManager am = (AlarmManager) context
 				.getSystemService(Context.ALARM_SERVICE);
-		PendingIntent operation = getIntent(context, service);
-	
-		am.cancel(operation);
+		PendingIntent pIntent = PendingIntent.getBroadcast(
+				Application.getInstance(), 0, intent,
+				PendingIntent.FLAG_UPDATE_CURRENT);
+		am.cancel(pIntent);
 		am.setInexactRepeating(
 				AlarmManager.RTC_WAKEUP,
 				System.currentTimeMillis()
-						+ context.getResources().getInteger(
-								startupDelayRes), context
-						.getResources().getInteger(delayRes), operation);
+						+ context.getResources().getInteger(startupDelayRes),
+				context.getResources().getInteger(delayRes), pIntent);
 		return;
 	}
 
-
-
-	public static void cancelTimer(Context context, Class<?> service) {
+	public static void cancelTimer(Context context, Intent intent) {
 		AlarmManager am = (AlarmManager) context
 				.getSystemService(Context.ALARM_SERVICE);
-		am.cancel(getIntent(context, service));
+		PendingIntent pIntent = PendingIntent.getBroadcast(
+				Application.getInstance(), 0, intent,
+				PendingIntent.FLAG_UPDATE_CURRENT);
+		am.cancel(pIntent);
 		return;
 	}
 }

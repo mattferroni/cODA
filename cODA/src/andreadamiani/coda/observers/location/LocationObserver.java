@@ -10,9 +10,12 @@ import android.content.Intent;
 import android.location.Criteria;
 import android.location.LocationManager;
 import android.os.Build;
+import android.util.Log;
 
 public class LocationObserver extends Observer {
 
+	private static final String DEBUG_TAG = "[cODA] LOCATION OBSERVER";
+	
 	private final static Class<?> service = LocationLogger.class;
 	private static final int LOCATION_UPDATE_REQUEST_CODE = 0;
 
@@ -55,11 +58,13 @@ public class LocationObserver extends Observer {
 
 	@Override
 	protected void start(Context context, Intent intent) {
+		Log.d(DEBUG_TAG, "In standard mode...");
 		startLocationObserver(context, intent, false);
 	}
 
 	@Override
 	protected void dimm(Context context, Intent intent) {
+		Log.d(DEBUG_TAG, "In dimmed mode...");
 		startLocationObserver(context, intent, true);
 	}
 
@@ -72,6 +77,7 @@ public class LocationObserver extends Observer {
 			// XXX Compatibility from API 8 to API 10
 			// No PendingIntent for Location Update
 		} else {
+			Log.d(DEBUG_TAG, "Scheduling service starts...");
 			LocationManager locationManager = (LocationManager) context
 					.getSystemService(Context.LOCATION_SERVICE);
 			locationManager.requestLocationUpdates(context.getResources()
@@ -83,6 +89,7 @@ public class LocationObserver extends Observer {
 
 	@Override
 	protected void stop(Context context, Intent intent) {
+		Log.d(DEBUG_TAG, "Unscheduling service starts...");
 		LocationManager locationManager = (LocationManager) context
 				.getSystemService(Context.LOCATION_SERVICE);
 		locationManager.removeUpdates(locationIntent);

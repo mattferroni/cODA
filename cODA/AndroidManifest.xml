@@ -10,8 +10,10 @@
         android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
+        android:name="andreadamiani.coda.Application"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
@@ -25,9 +27,11 @@
             android:enabled="true"
             android:exported="true" >
             <intent-filter>
-                <action android:name=".START" />
-                <action android:name=".DIMM" />
-                <action android:name=".STOP" />
+                <action android:name="andreadamiani.coda.START" />
+                <action android:name="andreadamiani.coda.DIMM" />
+                <action android:name="andreadamiani.coda.STOP" />
+                <action android:name="andreadamiani.coda.START_ACCELEROMETER_LOGGER" />
+                <action android:name="andreadamiani.coda.STOP_ACCELEROMETER_LOGGER" />
             </intent-filter>
         </receiver>
 
@@ -48,10 +52,15 @@
             android:name="andreadamiani.coda.observers.location.LocationLogger"
             android:enabled="true"
             android:exported="true" >
-             <intent-filter>
-                <action android:name=".START" />
-                <action android:name=".DIMM" />
-                <action android:name=".STOP" />
+        </receiver>
+        <receiver
+            android:name="andreadamiani.coda.observers.location.LocationObserver"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="andreadamiani.coda.START" />
+                <action android:name="andreadamiani.coda.DIMM" />
+                <action android:name="andreadamiani.coda.STOP" />
             </intent-filter>
         </receiver>
         <receiver
@@ -64,6 +73,16 @@
                 <action android:name="android.intent.action.BATTERY_OKAY" />
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name="andreadamiani.coda.MainActivity"
+            android:label="@string/title_activity_main" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
