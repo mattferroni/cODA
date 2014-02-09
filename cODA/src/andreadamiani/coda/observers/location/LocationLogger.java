@@ -26,6 +26,10 @@ public class LocationLogger extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		Log.d(DEBUG_TAG, "Receiving location update");
 		Location location = (Location) intent.getExtras().get(EXTRA_KEY);
+		if(location == null){
+			Log.d(DEBUG_TAG, "Aborting - no location dispatched.");
+			return;
+		}
 		ContentValues newValues = new ContentValues();
 		newValues.put(LogProvider.TIMESTAMP, System.currentTimeMillis());
 		newValues.put(LogProvider.OBSERVER_NAME, NAME);

@@ -15,7 +15,7 @@ import android.util.Log;
 public class LocationObserver extends Observer {
 
 	private static final String DEBUG_TAG = "[cODA] LOCATION OBSERVER";
-	
+
 	private final static Class<?> service = LocationLogger.class;
 	private static final int LOCATION_UPDATE_REQUEST_CODE = 0;
 
@@ -25,16 +25,18 @@ public class LocationObserver extends Observer {
 		baseCriteria.setCostAllowed(false);
 		baseCriteria.setSpeedRequired(false);
 	}
-	
+
 	private static final PendingIntent locationIntent;
-	static{
-		locationIntent = PendingIntent.getBroadcast(Application.getInstance().getApplicationContext(),
-				LOCATION_UPDATE_REQUEST_CODE, new Intent(Application.getInstance().getApplicationContext(), service),
-				PendingIntent.FLAG_UPDATE_CURRENT);
+	static {
+		locationIntent = PendingIntent.getBroadcast(Application.getInstance()
+				.getApplicationContext(), LOCATION_UPDATE_REQUEST_CODE,
+				new Intent(Application.getInstance().getApplicationContext(),
+						service), PendingIntent.FLAG_UPDATE_CURRENT);
 
 	}
 
-	@TargetApi(Build.VERSION_CODES.GINGERBREAD) //Uses converters for compatibility.
+	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
+	// Uses converters for compatibility.
 	private Criteria generateCriteria(boolean sleepMode) {
 		Criteria criteria = new Criteria(baseCriteria);
 		if (!sleepMode) {
@@ -47,9 +49,9 @@ public class LocationObserver extends Observer {
 
 		return criteria;
 	}
-	
-	private int accuracyCodeConverter(int accuracyCode){
-		if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.GINGERBREAD){
+
+	private int accuracyCodeConverter(int accuracyCode) {
+		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.GINGERBREAD) {
 			return Criteria.ACCURACY_COARSE;
 		} else {
 			return accuracyCode;
@@ -68,7 +70,8 @@ public class LocationObserver extends Observer {
 		startLocationObserver(context, intent, true);
 	}
 
-	@TargetApi(Build.VERSION_CODES.GINGERBREAD) //Internally handles the compatibility issues
+	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
+	// Internally handles the compatibility issues
 	private void startLocationObserver(Context context, Intent intent,
 			boolean sleepMode) {
 		stop(context, intent);
@@ -80,10 +83,16 @@ public class LocationObserver extends Observer {
 			Log.d(DEBUG_TAG, "Scheduling service starts...");
 			LocationManager locationManager = (LocationManager) context
 					.getSystemService(Context.LOCATION_SERVICE);
+			Criteria criteria = generateCriteria(sleepMode);
+			locationManager.getProviders(criteria, true);
+			if (locationManager.getProviders(criteria, true).isEmpty()) {
+				Log.d(DEBUG_TAG, "Aborting - no location device found.");
+				return;
+			}
 			locationManager.requestLocationUpdates(context.getResources()
 					.getInteger(R.integer.location_time_delay), context
 					.getResources().getInteger(R.integer.location_space_delay),
-					generateCriteria(sleepMode), locationIntent);
+					criteria, locationIntent);
 		}
 	}
 

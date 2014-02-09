@@ -19,7 +19,7 @@ public class Launcher extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)
 				|| intent.getAction().equals(Intent.ACTION_BATTERY_OKAY)) {
-			Intent battery = context.registerReceiver(null, new IntentFilter(
+			Intent battery = Application.getInstance().getApplicationContext().registerReceiver(null, new IntentFilter(
 					Intent.ACTION_BATTERY_CHANGED));
 			if (battery.getIntExtra(BatteryManager.EXTRA_LEVEL, 0) <= 20) {
 				Log.d(DEBUG_TAG, "Launching in dimmed mode...");
