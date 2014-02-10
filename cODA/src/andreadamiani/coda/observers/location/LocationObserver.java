@@ -62,12 +62,14 @@ public class LocationObserver extends Observer {
 	protected void start(Context context, Intent intent) {
 		Log.d(DEBUG_TAG, "In standard mode...");
 		startLocationObserver(context, intent, false);
+		super.start(context, intent);
 	}
 
 	@Override
 	protected void dimm(Context context, Intent intent) {
 		Log.d(DEBUG_TAG, "In dimmed mode...");
 		startLocationObserver(context, intent, true);
+		super.dimm(context, intent);
 	}
 
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
@@ -102,5 +104,6 @@ public class LocationObserver extends Observer {
 		LocationManager locationManager = (LocationManager) context
 				.getSystemService(Context.LOCATION_SERVICE);
 		locationManager.removeUpdates(locationIntent);
+		super.stop(context, intent);
 	}
 }

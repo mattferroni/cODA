@@ -3,6 +3,7 @@
  */
 package andreadamiani.coda;
 
+import andreadamiani.coda.observers.Observer.ObsAction;
 import android.content.Intent;
 import android.util.Log;
 
@@ -15,6 +16,8 @@ public class Application extends android.app.Application {
 	private static final String DEBUG_TAG = "cODA APPLICATION";
 	
 	private static Application instance;
+	
+	private ObsAction state = ObsAction.STOP;
 	
 	public static Application getInstance(){
 		return instance;
@@ -53,5 +56,13 @@ public class Application extends android.app.Application {
 		} catch (IllegalStateException e) {
 			return intent.getAction();
 		}
+	}
+
+	public ObsAction getState() {
+		return state;
+	}
+	
+	public void setState(ObsAction state){
+		this.state = state;
 	}
 }

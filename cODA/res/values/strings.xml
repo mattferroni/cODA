@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">cODA</string>
+    <string name="appwidget_text">cODA Controller</string>
+    <string name="add_widget">Add widget</string>
+    <string name="cODA_status_image">cODA status image</string>
+    <string name="widget_button_disable">Switch OFF</string>
+    <string name="widget_button_enable">Switch ON</string>
+	<string name="widget_enabling">Wait Please&#8230;</string>
+
 </resources>

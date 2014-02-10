@@ -176,6 +176,9 @@ public class AccelerometerLogger extends Service implements
 		final float alpha = Float.parseFloat(getResources().getString(
 				R.string.accelerometer_sensor_filter_alpha));
 
+		if(gravity==null){
+			return;
+		}
 		// Isolate the force of gravity with the low-pass filter.
 		gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
 		gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
@@ -191,6 +194,9 @@ public class AccelerometerLogger extends Service implements
 				"Registering "
 						+ AccelerometerLogger
 								.valueToString(linear_acceleration));
+		if(log==null){
+			return;
+		}
 		log.add(linear_acceleration);
 	}
 

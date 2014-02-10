@@ -17,7 +17,14 @@ public abstract class Observer extends BroadcastReceiver {
 	public static final String PERMISSION = "OBSERVER_ACTION";
 	
 	public enum ObsAction {
-		START, DIMM, STOP
+		START(2), DIMM(1), STOP(0);
+		
+		public final int id;
+		
+		private ObsAction(int id){
+			this.id = id;
+		}
+		
 	}
 
 	public Observer() {
@@ -31,11 +38,17 @@ public abstract class Observer extends BroadcastReceiver {
 		return operation;
 	}
 
-	protected abstract void start(Context context, Intent intent);
+	protected void start(Context context, Intent intent){
+		Application.getInstance().setState(ObsAction.START);
+	}
 
-	protected abstract void dimm(Context context, Intent intent);
+	protected void dimm(Context context, Intent intent){
+		Application.getInstance().setState(ObsAction.DIMM);
+	}
 
-	protected abstract void stop(Context context, Intent intent);
+	protected void stop(Context context, Intent intent){
+		Application.getInstance().setState(ObsAction.STOP);
+	}
 
 	@Override
 	public void onReceive(Context context, Intent intent) {

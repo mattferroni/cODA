@@ -1,0 +1,41 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/background_dark"
+    android:gravity="left"
+    android:padding="@dimen/widget_margin" >
+
+    <ImageView
+        android:id="@+id/widget_LED"
+        android:layout_width="@dimen/widget_LED"
+        android:layout_height="@dimen/widget_LED"
+        android:layout_alignBottom="@+id/widget_text"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@id/widget_text"
+        android:contentDescription="@string/cODA_status_image"
+        android:src="@drawable/ic_off" />
+
+    <Button
+        android:id="@+id/widget_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/widget_text"
+        android:layout_marginTop="@dimen/widget_button_top_margin"
+        android:text="@string/widget_enabling"/>
+    
+    <TextView
+        android:id="@id/widget_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="10dp"
+        android:contentDescription="@string/appwidget_text"
+        android:text="@string/appwidget_text"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/widget_LED" />
+
+</RelativeLayout>

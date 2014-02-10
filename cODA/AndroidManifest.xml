@@ -70,6 +70,30 @@
                 <action android:name="android.intent.action.BATTERY_OKAY" />
             </intent-filter>
         </receiver>
+        <receiver android:name="andreadamiani.coda.ControllerWidget" >
+            <intent-filter>
+                <action android:name="andreadamiani.coda.START" />
+                <action android:name="andreadamiani.coda.DIMM" />
+                <action android:name="andreadamiani.coda.STOP" />
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/controller_widget_info" />
+        </receiver>
+
+        <!-- <activity
+            android:name="andreadamiani.coda.MainActivity"
+            android:label="@string/title_activity_main" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity> -->
     </application>
 
 </manifest>

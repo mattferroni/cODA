@@ -61,16 +61,16 @@ public class LogProvider extends ContentProvider {
 	private MySQLiteOpenHelper myOpenHelper;
 
 	private long cleenupTime;
-	private static final long CLEENUP_DELAY = Application.getInstance().getApplicationContext()
-			.getResources().getInteger(R.integer.cleenup_cycle);
+	private static long CLEENUP_DELAY;
 
 	@Override
 	public boolean onCreate() {
+		CLEENUP_DELAY = getContext().getResources().getInteger(
+				R.integer.cleenup_cycle);
 		myOpenHelper = new MySQLiteOpenHelper(getContext(),
 				MySQLiteOpenHelper.DATABASE_NAME, null,
 				MySQLiteOpenHelper.DATABASE_VERSION);
-		cleenupTime = System.currentTimeMillis()
-				+ CLEENUP_DELAY;
+		cleenupTime = System.currentTimeMillis() + CLEENUP_DELAY;
 		return true;
 	}
 
@@ -152,7 +152,7 @@ public class LogProvider extends ContentProvider {
 		switch (uriMatcher.match(uri)) {
 		case ALLOBS:
 			long currentTime = System.currentTimeMillis();
-			if(currentTime < cleenupTime){
+			if (currentTime < cleenupTime) {
 				return 0;
 			} else {
 				cleenupTime = currentTime + CLEENUP_DELAY;

@@ -40,6 +40,7 @@ public class AccelerometerObserver extends Observer {
 		Log.d(DEBUG_TAG, "Scheduling service starts (standard mode)...");
 		setTimer(context, new Intent(Application.formatIntentAction(START_ACCELEROMETER_LOGGER)), R.integer.accelerometer_startup_delay,
 				R.integer.accelerometer_delay);
+		super.start(context, intent);
 	}
 
 	@Override
@@ -47,6 +48,7 @@ public class AccelerometerObserver extends Observer {
 		Log.d(DEBUG_TAG, "Scheduling service starts (dimmed mode)...");
 		setTimer(context, new Intent(Application.formatIntentAction(START_ACCELEROMETER_LOGGER)), R.integer.accelerometer_startup_delay,
 				R.integer.accelerometer_sleep_delay);
+		super.dimm(context, intent);
 	}
 
 	@Override
@@ -54,5 +56,6 @@ public class AccelerometerObserver extends Observer {
 		Log.d(DEBUG_TAG, "Unscheduling service starts...");
 		Application.getInstance().sendBroadcast(new Intent(Application.formatIntentAction(STOP_ACCELEROMETER_LOGGER)));
 		cancelTimer(context, new Intent(Application.formatIntentAction(START_ACCELEROMETER_LOGGER)));
+		super.stop(context, intent);
 	}
 }
