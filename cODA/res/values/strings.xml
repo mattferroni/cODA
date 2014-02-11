@@ -7,6 +7,8 @@
     <string name="cODA_status_image">cODA status image</string>
     <string name="widget_button_disable">Switch OFF</string>
     <string name="widget_button_enable">Switch ON</string>
-	<string name="widget_enabling">Wait Please&#8230;</string>
+    <string name="widget_enabling">Wait Please&#8230;</string>
+    <string name="late_actuator_notification_title_template">You may be late!</string>
+    <string name="late_actuator_notification_placeholder_text_template">You have just set an alarm at %1$s. If you leave at that time, you may be late for your next appointment. According to my calculations, you should leave at lest at %2$s.</string>
 
 </resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<integer name="late_decider_location_relevant_period">604800000</integer><!-- 7 days -->
+	<integer name="late_decider_location_check_hour_period">2</integer><!-- 2 hours -->
+	<integer name="late_decider_location_valid_hour_period">4</integer><!-- 2 hours -->
+	<integer name="late_decider_location_relevant_distance">250</integer><!-- 250 meters -->   
+</resources>

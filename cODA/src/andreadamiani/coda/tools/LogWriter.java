@@ -1,10 +1,12 @@
 /**
  * 
  */
-package andreadamiani.coda;
+package andreadamiani.coda.tools;
 
 import java.util.ArrayList;
 
+import andreadamiani.coda.Application;
+import andreadamiani.coda.LogProvider;
 import android.content.ContentProviderOperation;
 import android.content.OperationApplicationException;
 import android.os.RemoteException;

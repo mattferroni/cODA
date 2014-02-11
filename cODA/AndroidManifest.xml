@@ -85,7 +85,8 @@
                 android:resource="@xml/controller_widget_info" />
         </receiver>
 
-        <!-- <activity
+        <!--
+        <activity
             android:name="andreadamiani.coda.MainActivity"
             android:label="@string/title_activity_main" >
             <intent-filter>
@@ -93,7 +94,27 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> -->
+        </activity>
+        -->
+        <receiver
+            android:name="andreadamiani.coda.deciders.IsSettingAllarm"
+            android:enabled="true"
+            android:exported="true" >
+        </receiver>
+
+        <service
+            android:name="andreadamiani.coda.deciders.LateDecider"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
+
+        <receiver
+            android:name="andreadamiani.coda.actuators.late.LateActuator"
+            android:enabled="true"
+            android:exported="true" >
+        </receiver>
     </application>
+
+    <uses-permission android:name="android.permission.VIBRATE" />
 
 </manifest>

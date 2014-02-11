@@ -9,8 +9,8 @@ import java.util.List;
 import org.apache.http.ParseException;
 
 import andreadamiani.coda.LogProvider;
-import andreadamiani.coda.LogWriter;
 import andreadamiani.coda.R;
+import andreadamiani.coda.tools.LogWriter;
 import android.app.Service;
 import android.content.ContentProviderOperation;
 import android.content.ContentValues;
