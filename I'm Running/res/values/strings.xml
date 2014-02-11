@@ -4,5 +4,9 @@
     <string name="app_name">I\'m Running</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="main_text">I\'m Running is</string>
+    <string name="enabled">ENABLED</string>
+    <string name="disabled">DISABLED</string>
+    <string name="stop">I\'m not running anymore!</string>
 
 </resources>
