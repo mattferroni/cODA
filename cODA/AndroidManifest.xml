@@ -74,8 +74,7 @@
                 <action android:name="android.intent.action.BATTERY_OKAY" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name="andreadamiani.coda.ControllerWidget" >
+        <receiver android:name="andreadamiani.coda.ControllerWidget" >
             <intent-filter>
                 <action android:name="andreadamiani.coda.START" />
                 <action android:name="andreadamiani.coda.DIMM" />
@@ -105,6 +104,17 @@
             android:exported="true" >
             <intent-filter>
                 <action android:name="andreadamiani.coda.LATE" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="andreadamiani.coda.deciders.RunningDecider"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="andreadamiani.coda.START" />
+                <action android:name="andreadamiani.coda.DIMM" />
+                <action android:name="andreadamiani.coda.STOP" />
+                <action android:name="andreadamiani.coda.RUNNING_START" />
             </intent-filter>
         </receiver>
     </application>

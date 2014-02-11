@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.util.Locale;
 
 import andreadamiani.coda.Application;
-import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -15,16 +14,16 @@ public abstract class Observer extends BroadcastReceiver {
 
 	private static final String DEBUG_TAG = "[cODA] OBSERVER";
 	public static final String PERMISSION = "OBSERVER_ACTION";
-	
+
 	public enum ObsAction {
 		START(2), DIMM(1), STOP(0);
-		
+
 		public final int id;
-		
-		private ObsAction(int id){
+
+		private ObsAction(int id) {
 			this.id = id;
 		}
-		
+
 	}
 
 	public Observer() {
@@ -38,15 +37,15 @@ public abstract class Observer extends BroadcastReceiver {
 		return operation;
 	}
 
-	protected void start(Context context, Intent intent){
+	protected void start(Context context, Intent intent) {
 		Application.getInstance().setState(ObsAction.START);
 	}
 
-	protected void dimm(Context context, Intent intent){
+	protected void dimm(Context context, Intent intent) {
 		Application.getInstance().setState(ObsAction.DIMM);
 	}
 
-	protected void stop(Context context, Intent intent){
+	protected void stop(Context context, Intent intent) {
 		Application.getInstance().setState(ObsAction.STOP);
 	}
 
@@ -71,31 +70,5 @@ public abstract class Observer extends BroadcastReceiver {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
-	}
-
-	static public void setTimer(Context context, Intent intent,
-			int startupDelayRes, int delayRes) {
-		AlarmManager am = (AlarmManager) context
-				.getSystemService(Context.ALARM_SERVICE);
-		PendingIntent pIntent = PendingIntent.getBroadcast(
-				Application.getInstance(), 0, intent,
-				PendingIntent.FLAG_UPDATE_CURRENT);
-		am.cancel(pIntent);
-		am.setInexactRepeating(
-				AlarmManager.RTC_WAKEUP,
-				System.currentTimeMillis()
-						+ context.getResources().getInteger(startupDelayRes),
-				context.getResources().getInteger(delayRes), pIntent);
-		return;
-	}
-
-	public static void cancelTimer(Context context, Intent intent) {
-		AlarmManager am = (AlarmManager) context
-				.getSystemService(Context.ALARM_SERVICE);
-		PendingIntent pIntent = PendingIntent.getBroadcast(
-				Application.getInstance(), 0, intent,
-				PendingIntent.FLAG_UPDATE_CURRENT);
-		am.cancel(pIntent);
-		return;
 	}
 }

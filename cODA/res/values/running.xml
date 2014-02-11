@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <integer name="running_relevant_period">180000</integer>
+ <!-- 3 minutes -->
+    <string name="running_running_direction_acc_treshold">0.0</string>
+    <string name="running_running_direction_var_treshold">0.0</string>
+    <string name="running_vertical_direction_acc_treshold">0.0</string>
+    <string name="running_vertical_direction_var_treshold">0.0</string>
+    <string name="running_lateral_direction_acc_treshold">0.0</string>
+    <string name="running_lateral_direction_var_treshold">0.0</string>
+
+</resources>
