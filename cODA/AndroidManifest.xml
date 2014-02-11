@@ -11,6 +11,10 @@
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:name="andreadamiani.coda.Application"
@@ -70,7 +74,8 @@
                 <action android:name="android.intent.action.BATTERY_OKAY" />
             </intent-filter>
         </receiver>
-        <receiver android:name="andreadamiani.coda.ControllerWidget" >
+        <receiver
+            android:name="andreadamiani.coda.ControllerWidget" >
             <intent-filter>
                 <action android:name="andreadamiani.coda.START" />
                 <action android:name="andreadamiani.coda.DIMM" />
@@ -85,36 +90,23 @@
                 android:resource="@xml/controller_widget_info" />
         </receiver>
 
-        <!--
-        <activity
-            android:name="andreadamiani.coda.MainActivity"
-            android:label="@string/title_activity_main" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        -->
-        <receiver
-            android:name="andreadamiani.coda.deciders.IsSettingAllarm"
-            android:enabled="true"
-            android:exported="true" >
-        </receiver>
-
         <service
             android:name="andreadamiani.coda.deciders.LateDecider"
             android:enabled="true"
             android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.SET_ALARM" />
+            </intent-filter>
         </service>
 
         <receiver
             android:name="andreadamiani.coda.actuators.late.LateActuator"
             android:enabled="true"
             android:exported="true" >
+            <intent-filter>
+                <action android:name="andreadamiani.coda.LATE" />
+            </intent-filter>
         </receiver>
     </application>
-
-    <uses-permission android:name="android.permission.VIBRATE" />
 
 </manifest>
