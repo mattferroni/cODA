@@ -10,7 +10,7 @@ public class Launcher extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		if(!Application.getInstance().isAppStarted()){
+		if(Application.getInstance() == null || !Application.getInstance().isAppStarted()){
 			Intent i = new Intent(context, Activity.class);
 			i.putExtra("RUNNING_EXTRA", true);
 			context.startActivity(i);

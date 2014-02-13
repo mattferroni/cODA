@@ -33,11 +33,11 @@ public class Activity extends FragmentActivity implements
 		text = (TextView) findViewById(R.id.text);
 		button = (Button) findViewById(R.id.button);
 		dialog = CheckDialogFragment.newInstance();
-		if (savedInstanceState.containsKey("ENABLED")) {
+		if (savedInstanceState != null && savedInstanceState.containsKey("ENABLED")) {
 			this.onFragmentInteraction(savedInstanceState.getBoolean("ENABLED"));
 			restoring = true;
 		}
-		if (savedInstanceState.containsKey("RINGER_MODE")) {
+		if (savedInstanceState != null && savedInstanceState.containsKey("RINGER_MODE")) {
 			this.prevRingerMode = savedInstanceState.getInt("RINGER_MODE");
 		}
 		receiver = new BroadcastReceiver() {
@@ -55,11 +55,11 @@ public class Activity extends FragmentActivity implements
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
-		if (savedInstanceState.containsKey("ENABLED")) {
+		if (savedInstanceState != null && savedInstanceState.containsKey("ENABLED")) {
 			this.onFragmentInteraction(savedInstanceState.getBoolean("ENABLED"));
 			restoring = true;
 		}
-		if (savedInstanceState.containsKey("RINGER_MODE")) {
+		if (savedInstanceState != null && savedInstanceState.containsKey("RINGER_MODE")) {
 			this.prevRingerMode = savedInstanceState.getInt("RINGER_MODE");
 		}
 	}
