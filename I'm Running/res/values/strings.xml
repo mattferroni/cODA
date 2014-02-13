@@ -8,5 +8,11 @@
     <string name="enabled">ENABLED</string>
     <string name="disabled">DISABLED</string>
     <string name="stop">I\'m not running anymore!</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="dialog_title">Are you running?</string>
+    <string name="dialog_text">It seems like you are running, aren\'t you?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="auto_answer">[Automatic Message] I cannot answer at the moment, I am training. Please call again later.</string>
 
 </resources>
