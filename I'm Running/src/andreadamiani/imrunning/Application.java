@@ -22,7 +22,8 @@ public class Application extends android.app.Application {
 	private boolean isRegistered = false;
 	private BroadcastReceiver receiver;
 
-	private boolean isAppStarted;
+	private boolean started;
+	private boolean enabled;
 
 	public static Application getInstance() {
 		return instance;
@@ -40,7 +41,10 @@ public class Application extends android.app.Application {
 					Bundle bundle = intent.getExtras();
 					String phoneNumber = bundle
 							.getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
-					if ((phoneNumber != null)) {
+					boolean incoming = bundle.getString(
+							TelephonyManager.EXTRA_STATE).equals(
+							TelephonyManager.EXTRA_STATE_RINGING);
+					if ((phoneNumber != null) && incoming) {
 						SmsManager smsManager = SmsManager.getDefault();
 
 						String myMessage = getString(R.string.auto_answer);
@@ -57,17 +61,28 @@ public class Application extends android.app.Application {
 
 	public void registerReceiver(boolean enabled) {
 		if (enabled && !isRegistered) {
-			registerReceiver(receiver, new IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED));
+			registerReceiver(receiver, new IntentFilter(
+					TelephonyManager.ACTION_PHONE_STATE_CHANGED));
+			isRegistered = true;
 		} else if (!enabled && isRegistered) {
 			unregisterReceiver(receiver);
+			isRegistered = false;
 		}
 	}
 
-	public boolean isAppStarted() {
-		return isAppStarted;
+	public boolean isStarted() {
+		return started;
 	}
-	
-	public void setAppStarted(boolean started){
-		isAppStarted = started;
+
+	public void setStarted(boolean started) {
+		this.started = started;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 }

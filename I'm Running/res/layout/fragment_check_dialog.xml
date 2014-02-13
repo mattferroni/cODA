@@ -49,16 +49,14 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="@string/no"
-            android:onClick="onClick" />
+            android:text="@string/no" />
 
         <Button
             android:id="@+id/yes"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="@string/yes"
-            android:onClick="onClick" />
+            android:text="@string/yes" />
 
     </LinearLayout>
 

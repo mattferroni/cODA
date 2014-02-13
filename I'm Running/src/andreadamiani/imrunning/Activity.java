@@ -23,8 +23,8 @@ public class Activity extends FragmentActivity implements
 	private Button button;
 	private BroadcastReceiver receiver;
 	private DialogFragment dialog;
-	private boolean restoring = false;
 	private Integer prevRingerMode = null;
+	private boolean starting = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -33,9 +33,8 @@ public class Activity extends FragmentActivity implements
 		text = (TextView) findViewById(R.id.text);
 		button = (Button) findViewById(R.id.button);
 		dialog = CheckDialogFragment.newInstance();
-		if (savedInstanceState != null && savedInstanceState.containsKey("ENABLED")) {
-			this.onFragmentInteraction(savedInstanceState.getBoolean("ENABLED"));
-			restoring = true;
+		if (getIntent().hasExtra("RUNNING_EXTRA")) {
+			starting = true;
 		}
 		if (savedInstanceState != null && savedInstanceState.containsKey("RINGER_MODE")) {
 			this.prevRingerMode = savedInstanceState.getInt("RINGER_MODE");
@@ -55,10 +54,6 @@ public class Activity extends FragmentActivity implements
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
-		if (savedInstanceState != null && savedInstanceState.containsKey("ENABLED")) {
-			this.onFragmentInteraction(savedInstanceState.getBoolean("ENABLED"));
-			restoring = true;
-		}
 		if (savedInstanceState != null && savedInstanceState.containsKey("RINGER_MODE")) {
 			this.prevRingerMode = savedInstanceState.getInt("RINGER_MODE");
 		}
@@ -67,18 +62,19 @@ public class Activity extends FragmentActivity implements
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (getIntent().hasExtra("RUNNING_EXTRA")) {
+		if (starting) {
 			dialog.show(getSupportFragmentManager(), "RUNNING");
-		} else if (!restoring) {
-			onFragmentInteraction(restoring);
-		}
+			starting = false;
+		} 
+		Application.getInstance().setStarted(true);
+		onFragmentInteraction(Application.getInstance().isEnabled());
 		registerReceiver(receiver, new IntentFilter("andreadamiani.coda.LATE"));
-		Application.getInstance().setAppStarted(true);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
+		Application.getInstance().setStarted(false);
 		unregisterReceiver(receiver);
 	}
 
@@ -88,15 +84,17 @@ public class Activity extends FragmentActivity implements
 		getMenuInflater().inflate(R.menu.options, menu);
 		return true;
 	}
-
+	
 	@Override
 	public void onFragmentInteraction(boolean enable) {
 		if (enable) {
+			Application.getInstance().setEnabled(true);
 			interceptCalls(true);
 			text.setText(R.string.enabled);
 			text.setTextColor(Color.GREEN);
 			button.setEnabled(true);
 		} else {
+			Application.getInstance().setEnabled(false);
 			interceptCalls(false);
 			text.setText(R.string.disabled);
 			text.setTextColor(Color.argb(255, 204, 0, 51));
@@ -114,10 +112,10 @@ public class Activity extends FragmentActivity implements
 		}
 
 		if (enable) {
-			am.setRingerMode(prevRingerMode);
+			am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
 			Application.getInstance().registerReceiver(true);
 		} else {
-			am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+			am.setRingerMode(prevRingerMode);
 			Application.getInstance().registerReceiver(false);
 		}
 	}
@@ -140,6 +138,6 @@ public class Activity extends FragmentActivity implements
 	protected void onDestroy() {
 		super.onDestroy();
 		interceptCalls(false);
-		Application.getInstance().setAppStarted(false);
+		Application.getInstance().setStarted(false);
 	}
 }
