@@ -25,6 +25,9 @@
             android:name="andreadamiani.imrunning.Launcher"
             android:enabled="true"
             android:exported="true" >
+            <intent-filter>
+                <action android:name="andreadamiani.coda.RUNNING"/>
+            </intent-filter>
         </receiver>
     </application>
 
