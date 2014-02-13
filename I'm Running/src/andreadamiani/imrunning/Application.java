@@ -22,6 +22,8 @@ public class Application extends android.app.Application {
 	private boolean isRegistered = false;
 	private BroadcastReceiver receiver;
 
+	private boolean isAppStarted;
+
 	public static Application getInstance() {
 		return instance;
 	}
@@ -59,5 +61,13 @@ public class Application extends android.app.Application {
 		} else if (!enabled && isRegistered) {
 			unregisterReceiver(receiver);
 		}
+	}
+
+	public boolean isAppStarted() {
+		return isAppStarted;
+	}
+	
+	public void setAppStarted(boolean started){
+		isAppStarted = started;
 	}
 }

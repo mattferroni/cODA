@@ -73,6 +73,7 @@ public class Activity extends FragmentActivity implements
 			onFragmentInteraction(restoring);
 		}
 		registerReceiver(receiver, new IntentFilter("andreadamiani.coda.LATE"));
+		Application.getInstance().setAppStarted(true);
 	}
 
 	@Override
@@ -139,5 +140,6 @@ public class Activity extends FragmentActivity implements
 	protected void onDestroy() {
 		super.onDestroy();
 		interceptCalls(false);
+		Application.getInstance().setAppStarted(false);
 	}
 }
