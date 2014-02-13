@@ -24,6 +24,8 @@ import android.os.Handler.Callback;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -89,10 +91,14 @@ public class AccelerometerLogger extends Service implements
 
 	private boolean registered;
 
+	private WakeLock wakeLock;
+
 	@Override
 	public void onCreate() {
 		Log.d(DEBUG_TAG, "Creating the service...");
 		registered = false;
+		PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+		wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, NAME);
 		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 		accelerometer = sensorManager
 				.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -124,7 +130,7 @@ public class AccelerometerLogger extends Service implements
 	}
 
 	@Override
-	public void onDestroy() {
+	public void onDestroy() {				
 		timer.removeCallbacksAndMessages(null);
 		timer = null;
 		if (registered) {
@@ -134,6 +140,9 @@ public class AccelerometerLogger extends Service implements
 		log = null;
 		accelerometer = null;
 		sensorManager = null;
+		if(wakeLock != null){
+			wakeLock.release();
+		}
 	}
 
 	@Override
@@ -144,6 +153,9 @@ public class AccelerometerLogger extends Service implements
 		if (!registered) {
 			sensorManager.registerListener(this, accelerometer, sensorDelay);
 			registered = true;
+		}
+		if(wakeLock!=null){
+			wakeLock.acquire();
 		}
 		timer = new Handler(this);
 		timer.sendEmptyMessageDelayed(0, samplingInterval);
@@ -234,6 +246,7 @@ public class AccelerometerLogger extends Service implements
 		this.stopSelf();
 		return true;
 	}
+	
 
 	public static String valueToString(float[] value) {
 		StringBuilder string = new StringBuilder(Float.toString(value[0]));
