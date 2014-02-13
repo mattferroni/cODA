@@ -45,11 +45,15 @@ public class LocationLogger extends BroadcastReceiver {
 	}
 
 	public static String valueToString(Location location) {
-		return Location
-				.convert(location.getLatitude(), Location.FORMAT_SECONDS)
+		return commaSanitizer(Location
+				.convert(location.getLatitude(), Location.FORMAT_SECONDS))
 				+ VALUE_SEPARATOR
-				+ Location.convert(location.getLongitude(),
-						Location.FORMAT_SECONDS);
+				+ commaSanitizer(Location.convert(location.getLongitude(),
+						Location.FORMAT_SECONDS));
+	}
+	
+	public static String commaSanitizer(String string){
+		return string.replace(",",".");
 	}
 
 	public static Location parseValue(String coordsString) {
@@ -60,6 +64,17 @@ public class LocationLogger extends BroadcastReceiver {
 		}
 		location.setLatitude(Double.parseDouble(coords[0]));
 		location.setLongitude(Double.parseDouble(coords[1]));
+		return location;
+	}
+	
+	public static Location parseValueDirect(String coordsString) {
+		Location location = new Location("coda.LOCATION_LOG");
+		String[] coords = coordsString.split(VALUE_SEPARATOR);
+		if (coords.length != 2) {
+			throw new IllegalArgumentException();
+		}
+		location.setLatitude(Location.convert(coords[0]));
+		location.setLongitude(Location.convert(coords[1]));
 		return location;
 	}
 }

@@ -108,6 +108,7 @@ public class LogProvider extends ContentProvider {
 			Log.d(DEBUG_TAG, "Querying for the last record for " + obsName);
 			break;
 		case SINGLE_OBS:
+			obsName = uri.getPathSegments().get(1);
 			generateSingleObserverQuery(uri, queryBuilder, obsName, false);
 			Log.d(DEBUG_TAG, "Querying for all records for " + obsName);
 			break;

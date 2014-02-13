@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
 
     <application
         android:name="andreadamiani.coda.Application"
@@ -44,9 +45,12 @@
             android:name="andreadamiani.coda.LogProvider"
             android:authorities="andreadamiani.coda.log"
             android:enabled="true"
-            android:exported="true"
+            android:exported="true" >
+
+            <!--
             android:readPermission="andreadamiani.coda.READ_LOG"
-            android:writePermission="andreadamiani.coda.WRITE_LOG" >
+            android:writePermission="andreadamiani.coda.WRITE_LOG"
+            -->
         </provider>
 
         <receiver
@@ -93,9 +97,6 @@
             android:name="andreadamiani.coda.deciders.LateDecider"
             android:enabled="true"
             android:exported="true" >
-            <intent-filter>
-                <action android:name="android.intent.action.SET_ALARM" />
-            </intent-filter>
         </service>
 
         <receiver
@@ -115,6 +116,14 @@
                 <action android:name="andreadamiani.coda.DIMM" />
                 <action android:name="andreadamiani.coda.STOP" />
                 <action android:name="andreadamiani.coda.RUNNING_START" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="andreadamiani.coda.deciders.LateDeciderStarter"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.SET_ALARM" />
             </intent-filter>
         </receiver>
     </application>

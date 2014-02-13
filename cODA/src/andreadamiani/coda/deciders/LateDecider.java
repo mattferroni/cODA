@@ -8,9 +8,11 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Calendar;
 
 import org.apache.http.conn.ConnectTimeoutException;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -65,11 +67,14 @@ public class LateDecider extends IntentService {
 			String[] projection = { CalendarContract.Events.DTSTART,
 					CalendarContract.Events.EVENT_LOCATION };
 
-			String selection = "((" + CalendarContract.Events.ALL_DAY
-					+ " = ?) AND (" + CalendarContract.Events.AVAILABILITY
-					+ " = ?) AND (" + CalendarContract.Events.EVENT_LOCATION
+			String selection = "(("
+					 + CalendarContract.Events.ALL_DAY
+					 + " = ?) AND ("
+					 + CalendarContract.Events.AVAILABILITY
+					 + " = ?) AND ("
+					+ CalendarContract.Events.EVENT_LOCATION
 					+ " is not null) AND (" + CalendarContract.Events.DTSTART
-					+ " = ?) AND (" + CalendarContract.Events.DTEND + " = ?)";
+					+ " >= ?) AND (" + CalendarContract.Events.DTEND + " <= ?))";
 
 			String[] selectionArgs = {
 					Integer.toString(0),
@@ -115,11 +120,14 @@ public class LateDecider extends IntentService {
 			throws LookupFailed {
 		URL url;
 		try {
+			String encEnd = URLEncoder.encode(end,"UTF-8");
 			url = new URL(
-					"https://maps.googleapis.com/maps/api/directions/xml?"
-							+ "json=" + start + "&destination=" + end
+					"https://maps.googleapis.com/maps/api/directions/json?"
+							+ "origin=" + start + "&destination=" + encEnd
 							+ "&sensor=true" + "&alternatives=false");
 		} catch (MalformedURLException e) {
+			throw new RuntimeException();
+		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException();
 		}
 		ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -148,8 +156,15 @@ public class LateDecider extends IntentService {
 				if (!object.getString("status").equalsIgnoreCase("OK")) {
 					throw new ConnectTimeoutException();
 				}
-				return object.getJSONArray("routes").getJSONObject(0)
-						.getJSONObject("duration").getInt("value");
+				
+				JSONArray legs = object.getJSONArray("routes").getJSONObject(0).getJSONArray("legs");
+				int duration = 0;
+				
+				for(int i=0; i<legs.length(); i++){
+					duration += legs.getJSONObject(i).getJSONObject("duration").getInt("value");
+				}
+				
+				return duration;
 			}
 		} catch (ProtocolException e) {
 			throw new LookupFailed();
@@ -229,7 +244,7 @@ public class LateDecider extends IntentService {
 		String[] projection = { LogProvider.TIMESTAMP, LogProvider.LOG_VALUE };
 		String selection = "(" + LogProvider.TIMESTAMP + " >= ?)";
 		String[] selectionArgs = { Long.toString(System.currentTimeMillis()
-				+ getResources().getInteger(
+				- getResources().getInteger(
 						R.integer.late_decider_location_relevant_period)) };
 		String sortOrder = LogProvider.TIMESTAMP + " DESC";
 		Cursor cur = getContentResolver().query(
@@ -243,7 +258,7 @@ public class LateDecider extends IntentService {
 					.getColumnIndex(LogProvider.TIMESTAMP)));
 			if (c.get(Calendar.DAY_OF_WEEK) == day) {
 				int hour = c.get(Calendar.HOUR_OF_DAY);
-				Location location = LocationLogger.parseValue(cur.getString(cur
+				Location location = LocationLogger.parseValueDirect(cur.getString(cur
 						.getColumnIndex(LogProvider.LOG_VALUE)));
 				LocationInfo entry = locations.get(hour);
 				if (entry != null) {
