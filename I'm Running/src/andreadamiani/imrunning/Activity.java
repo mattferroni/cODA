@@ -1,10 +1,8 @@
 package andreadamiani.imrunning;
 
 import andreadamiani.imrunning.CheckDialogFragment.OnFragmentInteractionListener;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -21,10 +19,9 @@ public class Activity extends FragmentActivity implements
 
 	private TextView text;
 	private Button button;
-	private BroadcastReceiver receiver;
 	private DialogFragment dialog;
 	private Integer prevRingerMode = null;
-	private boolean starting = false;
+	private boolean restarting = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -33,49 +30,38 @@ public class Activity extends FragmentActivity implements
 		text = (TextView) findViewById(R.id.text);
 		button = (Button) findViewById(R.id.button);
 		dialog = CheckDialogFragment.newInstance();
-		if (getIntent().hasExtra("RUNNING_EXTRA")) {
-			starting = true;
-		}
-		if (savedInstanceState != null && savedInstanceState.containsKey("RINGER_MODE")) {
+		if (savedInstanceState != null
+				&& savedInstanceState.containsKey("RINGER_MODE")) {
 			this.prevRingerMode = savedInstanceState.getInt("RINGER_MODE");
 		}
-		receiver = new BroadcastReceiver() {
-
-			@Override
-			public void onReceive(Context arg0, Intent arg1) {
-				if (arg1.getAction().equals("andreadamiani.coda.RUNNING")) {
-					dialog.show(Activity.this.getSupportFragmentManager(),
-							"RUNNING");
-				}
-			}
-		};
+		onNewIntent(getIntent());
 	}
 
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
-		if (savedInstanceState != null && savedInstanceState.containsKey("RINGER_MODE")) {
+		if (savedInstanceState != null
+				&& savedInstanceState.containsKey("RINGER_MODE")) {
 			this.prevRingerMode = savedInstanceState.getInt("RINGER_MODE");
 		}
 	}
 
 	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		if(intent.hasExtra("RUNNING_EXTRA")){
+			restarting = true;
+		}
+	}
+	
+	@Override
 	protected void onResume() {
 		super.onResume();
-		if (starting) {
+		if (restarting) {
 			dialog.show(getSupportFragmentManager(), "RUNNING");
-			starting = false;
-		} 
-		Application.getInstance().setStarted(true);
+			restarting = false;
+		}
 		onFragmentInteraction(Application.getInstance().isEnabled());
-		registerReceiver(receiver, new IntentFilter("andreadamiani.coda.LATE"));
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		Application.getInstance().setStarted(false);
-		unregisterReceiver(receiver);
 	}
 
 	@Override
@@ -84,21 +70,21 @@ public class Activity extends FragmentActivity implements
 		getMenuInflater().inflate(R.menu.options, menu);
 		return true;
 	}
-	
+
 	@Override
 	public void onFragmentInteraction(boolean enable) {
 		if (enable) {
-			Application.getInstance().setEnabled(true);
 			interceptCalls(true);
 			text.setText(R.string.enabled);
 			text.setTextColor(Color.GREEN);
 			button.setEnabled(true);
+			Application.getInstance().setEnabled(true);
 		} else {
-			Application.getInstance().setEnabled(false);
 			interceptCalls(false);
 			text.setText(R.string.disabled);
 			text.setTextColor(Color.argb(255, 204, 0, 51));
 			button.setEnabled(false);
+			Application.getInstance().setEnabled(false);
 		}
 	}
 
@@ -107,16 +93,15 @@ public class Activity extends FragmentActivity implements
 		am = (AudioManager) getBaseContext().getSystemService(
 				Context.AUDIO_SERVICE);
 
-		if (prevRingerMode == null) {
+		if (!enable){
+			if (prevRingerMode != null) {
+				am.setRingerMode(prevRingerMode);
+			}
+			Application.getInstance().registerReceiver(false);
+		} else if (!Application.getInstance().isEnabled()){
 			prevRingerMode = am.getRingerMode();
-		}
-
-		if (enable) {
 			am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
 			Application.getInstance().registerReceiver(true);
-		} else {
-			am.setRingerMode(prevRingerMode);
-			Application.getInstance().registerReceiver(false);
 		}
 	}
 
@@ -128,7 +113,6 @@ public class Activity extends FragmentActivity implements
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putBoolean("ENABLED", button.isEnabled());
 		if (prevRingerMode != null) {
 			outState.putInt("RINGER_MODE", prevRingerMode);
 		}
@@ -138,6 +122,5 @@ public class Activity extends FragmentActivity implements
 	protected void onDestroy() {
 		super.onDestroy();
 		interceptCalls(false);
-		Application.getInstance().setStarted(false);
 	}
 }
