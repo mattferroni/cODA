@@ -8,7 +8,10 @@
     <string name="widget_button_disable">Switch OFF</string>
     <string name="widget_button_enable">Switch ON</string>
     <string name="widget_enabling">Wait Please&#8230;</string>
-    <string name="late_actuator_notification_title_template">You may be late!</string>
-    <string name="late_actuator_notification_placeholder_text_template">You have just set an alarm at %1$s. If you leave at that time, you may be late for your next appointment. According to my calculations, you should leave at lest at %2$s.</string>
-
+    <string name="log_permission_group">cODA Log Access Control</string>
+    <string name="log_permission_group_lable">These are the permission required to access and modify che cODA Log</string>
+    <string name="log_read_permission">cODA Log Read</string>
+    <string name="log_read_permission_lable">Allows to read the cODA Log, which may contain sensitive information.</string>
+	<string name="log_write_permission">cODA Log Write</string>
+    <string name="log_write_permission_lable">Allows to read and modify the cODA Log, which may contain sensitive information.</string>
 </resources>

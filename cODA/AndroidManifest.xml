@@ -14,9 +14,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <permission-group android:icon="@drawable/ic_launcher" android:label="@string/log_permission_group" android:name="andreadamiani.coda.LOG" android:description="@string/log_permission_group_lable"></permission-group>
+    <permission android:name="andreadamiani.coda.READ_LOG" android:label="@string/log_read_permission" android:permissionGroup="andreadamiani.coda.LOG" android:description="@string/log_read_permission_lable"></permission>
+    <permission android:name="andreadamiani.coda.WRITE_LOG" android:label="@string/log_write_permission" android:permissionGroup="andreadamiani.coda.LOG" android:description="@string/log_write_permission_lable"></permission>
 
     <application
         android:name="andreadamiani.coda.Application"
@@ -46,12 +47,9 @@
             android:name="andreadamiani.coda.LogProvider"
             android:authorities="andreadamiani.coda.log"
             android:enabled="true"
-            android:exported="true" >
-
-            <!--
+            android:exported="true"
             android:readPermission="andreadamiani.coda.READ_LOG"
-            android:writePermission="andreadamiani.coda.WRITE_LOG"
-            -->
+            android:writePermission="andreadamiani.coda.WRITE_LOG" >
         </provider>
 
         <receiver
@@ -100,14 +98,6 @@
             android:exported="true" >
         </service>
 
-        <receiver
-            android:name="andreadamiani.coda.actuators.late.LateActuator"
-            android:enabled="true"
-            android:exported="true" >
-            <intent-filter>
-                <action android:name="andreadamiani.coda.LATE" />
-            </intent-filter>
-        </receiver>
         <receiver
             android:name="andreadamiani.coda.deciders.RunningDecider"
             android:enabled="true"

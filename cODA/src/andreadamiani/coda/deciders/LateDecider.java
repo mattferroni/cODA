@@ -39,8 +39,8 @@ public class LateDecider extends IntentService {
 
 	public static final String ALLARM_MINUTES_EXTRA = "ALLARM_MINUTES_EXTRA";
 	public static final String ALLARM_HOUR_EXTRA = "ALLARM_HOUR_EXTRA";
-	public static final String MIN_TIME_EXTRA = "MIN_TIME";
-	public static final String DELAY_EXTRA = "DELAY";
+	public static final String MIN_TIME_EXTRA = "MIN_TIME_EXTRA";
+	public static final String DELAY_EXTRA = "DELAY_EXTRA";
 	public static final String NAME = "LATE";
 
 	public LateDecider() {

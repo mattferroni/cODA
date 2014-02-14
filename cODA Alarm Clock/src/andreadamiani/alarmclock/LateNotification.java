@@ -1,10 +1,11 @@
-package andreadamiani.coda.actuators.late;
+package andreadamiani.alarmclock;
 
-import andreadamiani.coda.R;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,7 +18,11 @@ import android.support.v4.app.NotificationCompat;
  * This class makes heavy use of the {@link NotificationCompat.Builder} helper
  * class to create notifications in a backward-compatible way.
  */
+@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 public class LateNotification {
+	public static final String NOTIFICATION_ALARM_MINUTES = "NOTIFICATION_ALARM_MINUTES";
+	public static final String NOTIFICATION_ALARM_HOUR = "NOTIFICATION_ALARM_HOUR";
+	public static final String NOTIFICATION_TEXT = "NOTIFICATION_TEXT";
 	/**
 	 * The unique identifier for this type of notification.
 	 */
@@ -42,7 +47,7 @@ public class LateNotification {
 		final Resources res = context.getResources();
 
 		final Bitmap picture = BitmapFactory.decodeResource(res,
-				R.drawable.ic_action_event);
+				R.drawable.ic_launcher);
 
 		final String ticker = res
 				.getString(R.string.late_actuator_notification_title_template);
@@ -51,6 +56,15 @@ public class LateNotification {
 		final String text = res.getString(
 				R.string.late_actuator_notification_placeholder_text_template,
 				lateAlarmTime, alarmTime);
+		final String[] alarmTimeSplit = alarmTime.split(LateActuator.SEPARATOR);
+
+		final Intent intent = new Intent(context, MainActivity.class);
+		intent.putExtra(NOTIFICATION_TEXT, text);
+		intent.putExtra(NOTIFICATION_ALARM_HOUR,
+				Integer.parseInt(alarmTimeSplit[0]));
+		intent.putExtra(NOTIFICATION_ALARM_MINUTES,
+				Integer.parseInt(alarmTimeSplit[1]));
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
 		final NotificationCompat.Builder builder = new NotificationCompat.Builder(
 				context)
@@ -61,8 +75,8 @@ public class LateNotification {
 
 				// Set required fields, including the small icon, the
 				// notification title, and text.
-				.setSmallIcon(R.drawable.ic_stat_late_actuator)
-				.setContentTitle(title).setContentText(text)
+				.setSmallIcon(R.drawable.ic_launcher).setContentTitle(title)
+				.setContentText(text)
 
 				// All fields below this line are optional.
 
@@ -77,16 +91,11 @@ public class LateNotification {
 				// Set ticker text (preview) information for this notification.
 				.setTicker(ticker)
 
-
 				// Set the pending intent to be initiated when the user touches
 				// the notification.
-//				.setContentIntent(
-//						PendingIntent.getActivity(
-//								context,
-//								0,
-//								new Intent(Intent.ACTION_VIEW, Uri
-//										.parse("http://www.google.com")),
-//								PendingIntent.FLAG_UPDATE_CURRENT))
+				.setContentIntent(
+						PendingIntent.getActivity(context, 0, intent,
+								PendingIntent.FLAG_UPDATE_CURRENT))
 
 				// Automatically dismiss the notification when it is touched.
 				.setAutoCancel(true);
