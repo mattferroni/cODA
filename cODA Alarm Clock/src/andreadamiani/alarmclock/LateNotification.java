@@ -64,7 +64,7 @@ public class LateNotification {
 				Integer.parseInt(alarmTimeSplit[0]));
 		intent.putExtra(NOTIFICATION_ALARM_MINUTES,
 				Integer.parseInt(alarmTimeSplit[1]));
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
 		final NotificationCompat.Builder builder = new NotificationCompat.Builder(
 				context)

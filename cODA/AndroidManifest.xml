@@ -114,7 +114,7 @@
             android:enabled="true"
             android:exported="true" >
             <intent-filter>
-                <action android:name="android.intent.action.SET_ALARM" />
+                <action android:name="andreadamiani.coda.ALARM" />
             </intent-filter>
         </receiver>
     </application>

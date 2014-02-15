@@ -60,13 +60,19 @@ public class MainActivity extends Activity implements OnClickListener{
 		int hour = timePicker.getCurrentHour();
 		int min = timePicker.getCurrentMinute();
 		
-		Intent intent = new Intent(AlarmClock.ACTION_SET_ALARM);
+		Intent intent = new Intent();
 		intent.putExtra(AlarmClock.EXTRA_MESSAGE, "Custom Alarm");
 		if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB){
 			intent.putExtra(AlarmClock.EXTRA_SKIP_UI, true);
 		}
 		intent.putExtra(AlarmClock.EXTRA_HOUR, hour);
 		intent.putExtra(AlarmClock.EXTRA_MINUTES, min);
+		Intent intentForBroadcast = (Intent) intent.clone();
+		
+		intent.setAction(AlarmClock.ACTION_SET_ALARM);
 		startActivity(intent);
+		
+		intentForBroadcast.setAction("andreadamiani.coda.ALARM");
+		sendBroadcast(intentForBroadcast);
 	}
 }
