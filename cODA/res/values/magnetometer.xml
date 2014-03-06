@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="magnetometer_startup_delay">0</integer>
+    <integer name="magnetometer_delay">300000</integer> <!-- 5 minutes -->
+    <integer name="magnetometer_sleep_delay">600000</integer> <!-- 10 minutes -->
+    <string name="magnetometer_sensor_sampling_rate">SENSOR_DELAY_FASTEST</string>
+    <integer name="magnetometer_sensor_sampling_rate">500</integer><!-- 0,5 seconds -->
+    <integer name="magnetometer_sensor_sampling_interval">180000</integer> <!-- 3 minutes -->
+    <integer name="magnetometer_expiry">3600000</integer><!-- 1 hour -->
+</resources>
