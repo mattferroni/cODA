@@ -15,9 +15,26 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <permission-group android:icon="@drawable/ic_launcher" android:label="@string/log_permission_group" android:name="andreadamiani.coda.LOG" android:description="@string/log_permission_group_lable"></permission-group>
-    <permission android:name="andreadamiani.coda.READ_LOG" android:label="@string/log_read_permission" android:permissionGroup="andreadamiani.coda.LOG" android:description="@string/log_read_permission_lable"></permission>
-    <permission android:name="andreadamiani.coda.WRITE_LOG" android:label="@string/log_write_permission" android:permissionGroup="andreadamiani.coda.LOG" android:description="@string/log_write_permission_lable"></permission>
+
+    <permission-group
+        android:name="andreadamiani.coda.LOG"
+        android:description="@string/log_permission_group_lable"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/log_permission_group" >
+    </permission-group>
+
+    <permission
+        android:name="andreadamiani.coda.READ_LOG"
+        android:description="@string/log_read_permission_lable"
+        android:label="@string/log_read_permission"
+        android:permissionGroup="andreadamiani.coda.LOG" >
+    </permission>
+    <permission
+        android:name="andreadamiani.coda.WRITE_LOG"
+        android:description="@string/log_write_permission_lable"
+        android:label="@string/log_write_permission"
+        android:permissionGroup="andreadamiani.coda.LOG" >
+    </permission>
 
     <application
         android:name="andreadamiani.coda.Application"
@@ -117,6 +134,12 @@
                 <action android:name="andreadamiani.coda.ALARM" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name="andreadamiani.coda.deciders.MotionDecider"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
 
 </manifest>

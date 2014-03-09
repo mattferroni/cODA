@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <integer name="motion_relevant_period">180000</integer>
+ <!-- 3 minutes -->
+ 	<integer name="motion_rate">20</integer> <!-- 50Hz -->
+ 	<integer name="motion_window">2000</integer> <!-- 2 seconds -->
+
+</resources>
