@@ -1,0 +1,7 @@
+IntentSenderTester/bin/jarlist.cache
+IntentSenderTester/gen/com/example/intentsendertester/BuildConfig.java
+LogInspector/bin/jarlist.cache
+LogInspector/gen/com/example/loginspector/BuildConfig.java
+*.cache
+cODA Alarm Clock/gen/andreadamiani/alarmclock/BuildConfig.java
+LogProviderPreparator/gen/com/example/logproviderpreparator/BuildConfig.java
