@@ -1,11 +1,19 @@
 package andreadamiani.coda.deciders;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
+import net.sf.javaml.classification.Classifier;
+import net.sf.javaml.classification.KNearestNeighbors;
+import net.sf.javaml.core.Dataset;
+import net.sf.javaml.core.DenseInstance;
+import net.sf.javaml.tools.data.FileHandler;
+import Jama.Matrix;
+import andreadamiani.coda.Application;
 import andreadamiani.coda.LogProvider;
 import andreadamiani.coda.R;
 import andreadamiani.coda.observers.accelerometer.AccelerometerLogger;
@@ -14,19 +22,40 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 import android.util.SparseArray;
 
 public class MotionDecider extends IntentService {
 
 	private static final String DEBUG_TAG = "[cODA] MOTION DECIDER";
+	private Dataset trainingData = null;
+	private final Classifier knn;
 
 	public MotionDecider() {
 		super(DEBUG_TAG);
+		try {
+			File trainingDataFile = new File(URI.create("file:///android_asset/motion_trainingdata.data"));
+			trainingData = FileHandler.loadDataset(trainingDataFile, 4, ",");
+		} catch (IOException e) {
+			Log.d(DEBUG_TAG, "Training dataset not available - no classification will be available.");
+		}
+		if(trainingData != null){
+			knn = new KNearestNeighbors(getResources().getInteger(
+					R.integer.motion_knn_k));
+			knn.buildClassifier(trainingData);
+		} else {
+			knn = null;
+		}
 	}
 
 	@Override
 	protected void onHandleIntent(Intent arg0) {
 
+		if(knn==null){
+			Log.d(DEBUG_TAG, "Classifier not available - aborting.");
+			return;
+		}
+		
 		SparseArray<float[]> accelerometerData = new SparseArray<float[]>();
 		int[] accelerometerInterval = { 0, 0 };
 		SparseArray<float[]> gyroscopeData = new SparseArray<float[]>();
@@ -84,7 +113,8 @@ public class MotionDecider extends IntentService {
 						: gyroscopeInterval[1] };
 
 		int resolution = getResources().getInteger(R.integer.motion_rate);
-		int windowSize = getResources().getInteger(R.integer.motion_window);
+		int windowDuration = getResources().getInteger(R.integer.motion_window);
+		int windowSize = (windowDuration / resolution);
 
 		ArrayList<float[][]> imuValues = new ArrayList<float[][]>();
 		for (int i = interval[0]; i <= interval[1]; i += resolution) {
@@ -96,13 +126,70 @@ public class MotionDecider extends IntentService {
 		accelerometerData = null;
 		gyroscopeData = null;
 
-		// TODO
+		Matrix dataMatrix = new Matrix(WindowFeatures.featuresCount,
+				((imuValues.size() / windowSize) * 2) - 1);
+		for (int start = 0, j = 0; start < imuValues.size() - windowSize; start += windowSize / 2) {
+			WindowFeatures feats = new WindowFeatures(imuValues.subList(start,
+					start + windowSize));
+			assert (j < dataMatrix.getColumnDimension());
+			for (int i = 0; i < dataMatrix.getRowDimension(); i++) {
+				dataMatrix.set(i, j, feats.getFeature(i));
+			}
+			j++;
+		}
 
+		imuValues = null;
+
+		Matrix featuresMeans = new Matrix(dataMatrix.getRowDimension(), 1);
+		for (int i = 0; i < dataMatrix.getRowDimension(); i++) {
+			float accumulator = 0;
+			int j;
+			for (j = 0; j < dataMatrix.getColumnDimension(); j++) {
+				accumulator += dataMatrix.get(i, j);
+			}
+			featuresMeans.set(i, 0, accumulator / j);
+		}
+
+		for (int j = 0; j < dataMatrix.getColumnDimension(); j++) {
+			Matrix column = dataMatrix.getMatrix(0,
+					dataMatrix.getRowDimension() - 1, j, j);
+			column.minusEquals(featuresMeans);
+			dataMatrix.setMatrix(0, dataMatrix.getRowDimension() - 1, j, j,
+					column);
+		}
+
+		featuresMeans = null;
+
+		Matrix principalComponents = dataMatrix.svd().getV().transpose();
+
+		double[][] principalComponentsArray = principalComponents.getArray();
+		principalComponents = null;
+		dataMatrix = null;
+
+		int relevant_components = getResources().getInteger(
+				R.integer.motion_relevant_components);
+		int isRunning = 0;
+		for (int i = 0; i < (principalComponentsArray.length < relevant_components ? principalComponentsArray.length
+				: relevant_components); i++) {
+			if (trainingData.classIndex(knn.classify(new DenseInstance(
+					principalComponentsArray[i]))) == getResources().getInteger(R.integer.motion_running_class_id)) {
+				isRunning++;
+			} else {
+				isRunning--;
+			}
+		}
+
+		if(isRunning > getResources().getInteger(R.integer.motion_treshold)){
+			Application.getInstance().sendBroadcast(
+					new Intent(Application.formatIntentAction("RUNNING")));
+		}
 	}
 
 	private class WindowFeatures {
 
-		public final float[] features = new float[116];
+		public static final int featuresCount = 116;
+
+		public final float[] features = new float[featuresCount];
 		public static final int MEAN_ACC_X = 0;
 		public static final int MEAN_ACC_Y = 1;
 		public static final int MEAN_ACC_Z = 2;
@@ -220,14 +307,18 @@ public class MotionDecider extends IntentService {
 		public static final int MCR_ROT_Y = 114;
 		public static final int MCR_ROT_Z = 115;
 
-		public WindowFeatures(ArrayList<float[][]> entries) {
+		public WindowFeatures(List<float[][]> entries) {
 			computeMeans(entries);
 			computeStandardDeviationsAndVariances(entries);
 			computePercentiles(entries);
 			computeCrossingRate(entries);
 		}
 
-		private void computeCrossingRate(ArrayList<float[][]> entries) {
+		public float getFeature(int i) {
+			return features[i];
+		}
+
+		private void computeCrossingRate(List<float[][]> entries) {
 			int[][] semiplanZCR = { { 0, 0, 0 }, { 0, 0, 0 } };
 			int[][] semiplanMCR = { { 0, 0, 0 }, { 0, 0, 0 } };
 
@@ -321,7 +412,7 @@ public class MotionDecider extends IntentService {
 			features[MCR_ROT_Z] /= entriesNum;
 		}
 
-		private void computePercentiles(ArrayList<float[][]> entries) {
+		private void computePercentiles(List<float[][]> entries) {
 			int entriesNum = entries.size();
 			SortedArrayList<Float> accX = new SortedArrayList<Float>(entriesNum);
 			SortedArrayList<Float> accY = new SortedArrayList<Float>(entriesNum);
@@ -462,7 +553,7 @@ public class MotionDecider extends IntentService {
 			}
 		}
 
-		private void computeMeans(ArrayList<float[][]> entries) {
+		private void computeMeans(List<float[][]> entries) {
 			float[][] accumulators = { { 0, 0, 0 }, { 0, 0, 0 } };
 			float[][] squareAccumulators = { { 0, 0, 0 }, { 0, 0, 0 } };
 			for (float[][] i : entries) {
@@ -513,7 +604,7 @@ public class MotionDecider extends IntentService {
 		}
 
 		private void computeStandardDeviationsAndVariances(
-				ArrayList<float[][]> entries) {
+				List<float[][]> entries) {
 			float[][] accumulators = { { 0, 0, 0 }, { 0, 0, 0 } };
 			float[][] squareAccumulators = { { 0, 0, 0 }, { 0, 0, 0 } };
 			for (float[][] i : entries) {
